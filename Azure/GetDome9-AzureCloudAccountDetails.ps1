@@ -2,18 +2,22 @@
 .NOTES
 	Author: Mike Suter 
 	Contact: mike.suter@cbre.com
-	Version: 1.0.0
-	Date: 2017.08.03
+	Version: 1.0.3
+	Date: 2017.09.08
 	Title: Azure RM Script - Gathers Azure Account Data for addition of Cloud Account to Dome9
 	Rights: Written for Dome9 Security Ltd. for use as is or modified, all rights for free.
 .SYNOPSIS
-	Connects to AzureRM, offers menu of Subscriptions and presents data needed for Dome9 connectivity
+	Connects to AzureRM, offers menu of Subscriptions and presents data needed for Dome9 connectivity. Supports MFA Auth.
 .DESCRIPTION
 	Script requests the users corporate SSO credentials (email address and password) then logs into AzureRM.
 	A menu of available subscriptions is presented based on the account's role access. Once a subscription
 	is selected, a new Key is generated, and all of the data required to add the Azure Account to Dome9 will be presented.
 .EXAMPLE
 	- Run the script from the powershell console
+.PREREQUISITES
+	- Windows PowerShell 5.0
+	- Microsoft Online Services Sign-In Assistant for IT Professionals:	https://www.microsoft.com/en-us/download/details.aspx?id=41950
+	- Install AzureRM PowerShell Module - Run: Install-Module -Name AzureRM -Confirm:$true
 #>
 
 ## Function to ask to create an Azure AD Application automatically
@@ -129,8 +133,11 @@ If (!$isAzureRmProfInstalled -and !$isAzureRmResInstalled) {
 Write-Host "Done" -ForegroundColor Green; Write-Host `n -NoNewline
 
 ## Requests SSO credentials from user and logs into AzureRM Portal
-$Creds = $host.UI.PromptForCredential('Azure RM Login', 'Please enter your Work eMail Address and Password.', '', '')
-Login-AzureRmAccount -Credential $Creds
+
+## Login Prompt
+## Required install Microsoft Online Services Sign-In Assistant for IT Professionals RTW
+##	https://www.microsoft.com/en-us/download/details.aspx?id=41950
+Login-AzureRmAccount
 
 ## Checks to see if the AD Application was created with the correct name
 Write-Host '## ' -Foregroundcolor DarkGray -NoNewLine; Write-Host "Checking if Dome9-Connect Azure AD Application was created..." -NoNewline -ForegroundColor White
@@ -156,7 +163,7 @@ If (!(Get-AzureRmADApplication -DisplayNameStartWith 'Dome9')) {
 		## Creating new AD Application
 		Write-Host '## ' -Foregroundcolor DarkGray -NoNewLine; Write-Host "Creating new AD Application..." -NoNewline -ForegroundColor White
 		$newguid = [guid]::NewGuid()
-		$identifierUris = 'https://cbre.onmicrosoft.com/' + $newguid
+		$identifierUris = 'https://XXX.onmicrosoft.com/' + $newguid
 		New-AzureRmADApplication -DisplayName 'Dome9-Connect' -HomePage 'https://secure.dome9.com' -IdentifierUris $identifierUris | Out-Null
 		$AdAppId = (Get-AzureRmADApplication -DisplayNameStartWith 'Dome9').ApplicationId.ToString()
 		$AdAppObjectId = (Get-AzureRmADApplication -DisplayNameStartWith 'Dome9').ObjectId.ToString()
@@ -214,14 +221,14 @@ $SubDetails = @()
 $Details = @{}
 $SubIndex = 0
 $Subs = Get-AzureRmSubscription -WarningAction 0 | % {
-	$Details = [PSCustomObject]@{'Option' = $SubIndex;'Subcription Name' = $_.Name}
+	$Details = [PSCustomObject]@{'Option' = $SubIndex;'Subscription Id' = $_.Id;'Subcription Name' = $_.Name}
 	$SubDetails += $Details
 	$SubIndex++
 }
 
 ## If there are more than one Subscriptions available, presents a list of Subs and requests a selection
 If ($SubDetails.Length -ne 1) {
-	$SubDetails | ft -AutoSize @{n='Option';e={$_.Option};Alignment='left'}, 'Subcription Name'
+	$SubDetails | ft -AutoSize @{n='Option';e={$_.Option};Alignment='left'}, 'Subscription Id', 'Subcription Name'
 	Write-Host '# ' -Foregroundcolor DarkGray -NoNewLine; Write-Host 'Please select only one ' -Foregroundcolor White -NoNewLine
 	Write-Host 'Subscription ' -Foregroundcolor Yellow -NoNewLine;Write-Host 'from the list of Options' -Foregroundcolor White
 	Write-Host 'Option' -Foregroundcolor White -NoNewLine; Write-Host ' :> ' -NoNewline -ForegroundColor DarkGray; $SubOption = Read-Host; Write `r
