@@ -17,7 +17,7 @@ CloudFormation Template that Prepare Role on AWS account to connenct to Dome9
 5. Make sure you check "I acknowledge that AWS CloudFormation might create IAM resources." in the console or use "--capabilities CAPABILITY_IAM" in cli command. 
 6. After the process finished, a new role is created which will contain the "role ARN" and the "External ID" that required to enter.
 
-## Back in Dome9
+## Back in Dome9:
 1. Fill in the 'Display Name' field with a name for this account (ex: AWS-Prod) 
 2. Paste in the Role ARN from the CloudFormation output
 3. Click Finish
