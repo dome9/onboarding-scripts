@@ -1,8 +1,7 @@
 # Dome9-OnBoarding-CFT
 CloudFormation Template that Prepare Role on AWS account to connenct to Dome9 
 
-
-<u>The Process:<u>
+# Steps:
 
 ## Dome9 Setup:
 1. Log into Dome9 and go to 'Add AWS Account'
