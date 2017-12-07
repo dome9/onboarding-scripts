@@ -5,7 +5,8 @@
       "Type": "AWS::IAM::Role",
       "Properties": {
         "ManagedPolicyArns": [
-          "arn:aws:iam::aws:policy/SecurityAudit"
+          "arn:aws:iam::aws:policy/SecurityAudit",
+          "arn:aws:iam::aws:policy/AmazonInspectorReadOnlyAccess"
         ],
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
@@ -48,7 +49,8 @@
 					   "logs:FilterLogEvents",
 					   "cloudtrail:LookupEvents",
 					   "lambda:List*",
-					   "s3:List*",
+             "s3:GetEncryptionConfiguration",
+             "s3:List*",
 					   "elasticfilesystem:Describe*",
 					   "sns:ListSubscriptions",
 					   "sns:ListSubscriptionsByTopic"

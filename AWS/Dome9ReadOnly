@@ -1,44 +1,12 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Resources": {
-    "Policy": {
-      "Type": "AWS::IAM::Policy",
-      "Properties": {
-        "PolicyName": "dome9ReadonlyPolicy",
-        "Roles": [
-          {
-            "Ref": "Role"
-          }
-        ],
-        "PolicyDocument": {
-			{
-			   "Version": "2012-10-17",
-			   "Statement": [
-				   {
-					   "Sid": "Dome9ReadOnly",
-					   "Action": [
-						   "logs:Describe*",
-						   "logs:Get*",
-						   "logs:FilterLogEvents",
-						   "cloudtrail:LookupEvents",
-						   "lambda:List*",
-						   "s3:List*",
-						   "elasticfilesystem:Describe*",
-						   "sns:ListSubscriptions",
-						   "sns:ListSubscriptionsByTopic"
-					   ],
-					   "Effect": "Allow",
-					   "Resource": "*"
-				   }
-			   ]
-			}
-      }
-    },
     "Role": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "ManagedPolicyArns": [
-          "arn:aws:iam::aws:policy/SecurityAudit"
+          "arn:aws:iam::aws:policy/SecurityAudit",
+          "arn:aws:iam::aws:policy/AmazonInspectorReadOnlyAccess"
         ],
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
@@ -59,6 +27,39 @@
             }
           ]
         }
+      }
+    },
+    "ReadOnlyPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "Dome9Readonly",
+        "Roles": [
+          {
+            "Ref": "Role"
+          }
+        ],
+        "PolicyDocument": {
+       "Version": "2012-10-17",
+       "Statement": [
+         {
+           "Sid": "Dome9ReadOnly",
+           "Action": [
+             "logs:Describe*",
+             "logs:Get*",
+             "logs:FilterLogEvents",
+             "cloudtrail:LookupEvents",
+             "lambda:List*",
+             "s3:GetEncryptionConfiguration",
+             "s3:List*",
+             "elasticfilesystem:Describe*",
+             "sns:ListSubscriptions",
+             "sns:ListSubscriptionsByTopic"
+           ],
+           "Effect": "Allow",
+           "Resource": "*"
+         }
+       ]
+    }
       }
     }
   },
