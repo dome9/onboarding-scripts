@@ -49,7 +49,6 @@
 					   "logs:FilterLogEvents",
 					   "cloudtrail:LookupEvents",
 					   "lambda:List*",
-             				   "s3:GetEncryptionConfiguration",
              				   "s3:List*",
 					   "elasticfilesystem:Describe*",
 					   "sns:ListSubscriptions",
