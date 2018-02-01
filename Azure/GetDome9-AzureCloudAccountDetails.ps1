@@ -208,7 +208,8 @@ If ($CreateDome9AdAppApiKey) {
 ## Creating new API Key on the Dome9-Connect AD Application
 Write-Host '## ' -Foregroundcolor DarkGray -NoNewLine; Write-Host "Creating new AD Application API Key (44-char length, 2 year duration)..." -NoNewline -ForegroundColor White
 $AdAppApiKey = Create-AesKey
-New-AzureRmADAppCredential -ObjectId $AdAppObjectId -Password $AdAppApiKey -EndDate ((Get-Date).AddYears(2)) | Out-Null
+$secureAdAppApiKey = ConvertTo-SecureString -String $AdAppApiKey -AsPlainText -Force
+New-AzureRmADAppCredential -ObjectId $AdAppObjectId -Password $secureAdAppApiKey -EndDate ((Get-Date).AddYears(2)) | Out-Null
 Write-Host "Done" -ForegroundColor Green; Write-Host `n -NoNewline
 } Else {$AdAppApiKey = '<Use previously generated key>'}
 
