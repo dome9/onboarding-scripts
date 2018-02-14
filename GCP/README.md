@@ -1,5 +1,5 @@
 # **Add multiple GCP projects (from one organization)** #
-A command line tool to add multiple all projects (from one organization) into Dome9 ARC platform.<br/>
+A command line tool to add multiple projects (from one organization) into Dome9 ARC platform.<br/>
 This tool assume a single GCP service account with its credentials file donwloaded.
 
 
