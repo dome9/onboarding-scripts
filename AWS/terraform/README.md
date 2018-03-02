@@ -9,7 +9,7 @@ Terraform Templates that Prepare the Role on AWS account to connenct to Dome9
 3. Click 'Next' 
 4. In the next window, copy down the string in the 'External ID' field. You'll need this later. 
 
-## In terraform:
+## In Terraform:
 1. Choose file according to the protection mode you prefer (Read Only or Full Protect)
 2. Remove or rename the .tf file you won't be using since Terraform will try to run all *.tf files in the directory.
 3. Run 'terraform plan'
