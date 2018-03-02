@@ -1,0 +1,21 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Dome9ReadOnly",
+            "Action": [
+                "logs:Describe*",
+                "logs:Get*",
+                "logs:FilterLogEvents",
+                "cloudtrail:LookupEvents",
+                "lambda:List*",
+                "s3:List*",
+                "elasticfilesystem:Describe*",
+                "sns:ListSubscriptions",
+                "sns:ListSubscriptionsByTopic"
+            ],
+            "Effect": "Allow",
+            "Resource": "*"
+        }
+    ]
+}
