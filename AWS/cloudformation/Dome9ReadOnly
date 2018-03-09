@@ -44,15 +44,21 @@
          {
            "Sid": "Dome9ReadOnly",
            "Action": [
-             "logs:Describe*",
-             "logs:Get*",
-             "logs:FilterLogEvents",
-             "cloudtrail:LookupEvents",
-             "lambda:List*",
-             "s3:List*",
-             "elasticfilesystem:Describe*",
-             "sns:ListSubscriptions",
-             "sns:ListSubscriptionsByTopic"
+              "cloudtrail:LookupEvents",
+              "elasticfilesystem:Describe*",
+              "firehose:Describe*",
+              "firehose:List*",
+              "kinesis:List*",
+              "kinesis:Describe*",
+              "kinesisvideo:Describe*",
+              "kinesisvideo:List*",
+              "logs:Describe*",
+              "logs:Get*",
+              "logs:FilterLogEvents",
+              "lambda:List*",
+              "s3:List*",
+              "sns:ListSubscriptions",
+              "sns:ListSubscriptionsByTopic"
            ],
            "Effect": "Allow",
            "Resource": "*"

@@ -4,13 +4,19 @@
         {
             "Sid": "Dome9ReadOnly",
             "Action": [
+                "cloudtrail:LookupEvents",
+                "elasticfilesystem:Describe*",
+                "firehose:Describe*",
+                "firehose:List*",
+                "kinesis:List*",
+                "kinesis:Describe*",
+                "kinesisvideo:Describe*",
+                "kinesisvideo:List*",
                 "logs:Describe*",
                 "logs:Get*",
                 "logs:FilterLogEvents",
-                "cloudtrail:LookupEvents",
                 "lambda:List*",
                 "s3:List*",
-                "elasticfilesystem:Describe*",
                 "sns:ListSubscriptions",
                 "sns:ListSubscriptionsByTopic"
             ],
