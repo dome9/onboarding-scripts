@@ -40,6 +40,7 @@ def run():
     # set up our AWS creds and other AWS dependencies
     awskey = config.get('aws', 'awskey')
     awssecret = config.get('aws', 'awssecret')
+    region_name = config.get('aws', 'region_name')
 
     if d9mode == ('readonly'):
         cfts3path = config.get('aws', 'cfts3pathro')
@@ -57,10 +58,10 @@ def run():
     client = boto3.client('cloudformation',
     aws_access_key_id=awskey,
     aws_secret_access_key=awssecret,
-    region_name='us-west-1'
+    region_name=region_name
     )
 
-    d9stack=('Dome9PolicyAutomated1')
+    d9stack=('Dome9PolicyAutomated')
 
     def _stack_exists(stack_name):
         stacks = client.list_stacks()['StackSummaries']
