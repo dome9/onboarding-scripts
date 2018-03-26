@@ -1,10 +1,7 @@
-# Dome9-OnBoarding
+# Dome9 Onboarding
 
 This is the fully automated option that will create the cross-account role on the target account, and then link the account to Dome9 via API. 
 
-
-# d9_aws_acct_add.py
--------------------
 
 This is a simple example script to understand how to leverage automation,
 including both AWS CloudFormation templates and this script, to add an AWS
@@ -13,7 +10,7 @@ account to a Dome9 account.
 ## Setup
 
 - First, create or locate an S3 bucket to store the CloudFormation templates in.
-They can be found at: https://github.com/Dome9/Dome9-OnBoarding-CFT
+They can be found at: https://github.com/Dome9/onboarding-scripts/tree/master/AWS/cloudformation
 
 - While these templates have no sensitive information in them, choose the correct
 security of this S3 bucket in accordance to what you do or plan to store within
@@ -40,7 +37,7 @@ pip install boto3 requests
 
 ## Operation
 
-#Call the script like this:
+### Call the script like this:
 ```bash
 python d9_aws_acct_add.py "AWS Account"
 ```
@@ -59,4 +56,5 @@ but works well and should serve to get you familiar with how this can be
 accomplished.
 
 Patrick Pushor
+
 patrick@dome9.com
