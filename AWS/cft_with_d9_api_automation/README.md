@@ -24,6 +24,8 @@ the d9_aws_acct_add.conf file.
 - Ensure that both your Dome9 API keys and AWS API keys exist in this file as
 well.
 
+- Set region_name to the region you would like this CloudFormation template to be deployed to
+
 - The last element of configuration in the .conf file is d9mode.  This can be one
 of readwrite or readonly.  Case matters.
 
