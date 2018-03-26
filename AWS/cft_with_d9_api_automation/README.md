@@ -58,7 +58,7 @@ but works well and should serve to get you familiar with how this can be
 accomplished.
 
 ## Sample output
-```
+```bash
 [AlexAir cft_with_d9_api_automation]$python d9_aws_acct_add.py "Alex - Sandbox"
 Starting Dome9 AWS Account Add Script...
 Provisioning the CloudFormation stack @ AWS.
