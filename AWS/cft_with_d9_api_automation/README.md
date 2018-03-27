@@ -35,6 +35,8 @@ install the dependencies (boto3 AWS library https://boto3.readthedocs.io/en/late
 pip install boto3 requests
 ```
 
+- This needs to run with Python 3+
+
 - This concludes the dependencies required.
 
 ## Operation

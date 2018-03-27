@@ -48,6 +48,8 @@
               "elasticfilesystem:Describe*",
               "firehose:Describe*",
               "firehose:List*",
+              "guardduty:Get*",
+              "guardduty:List*",
               "kinesis:List*",
               "kinesis:Describe*",
               "kinesisvideo:Describe*",
