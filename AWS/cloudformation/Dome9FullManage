@@ -1,128 +1,87 @@
-{
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Resources": {
-    "Role": {
-      "Type": "AWS::IAM::Role",
-      "Properties": {
-        "ManagedPolicyArns": [
-          "arn:aws:iam::aws:policy/SecurityAudit",
-          "arn:aws:iam::aws:policy/AmazonInspectorReadOnlyAccess"
-        ],
-        "AssumeRolePolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": "arn:aws:iam::634729597623:root"
-              },
-              "Action": "sts:AssumeRole",
-              "Condition": {
-                "StringEquals": {
-                  "sts:ExternalId": {
-                    "Ref": "Externalid"
-                  }
-                }
-              }
-            }
-          ]
-        }
-      }
-    },
-    "ReadOnlyPolicy": {
-      "Type": "AWS::IAM::Policy",
-      "Properties": {
-        "PolicyName": "Dome9Readonly",
-        "Roles": [
-          {
-            "Ref": "Role"
-          }
-        ],
-        "PolicyDocument": {
-		   "Version": "2012-10-17",
-		   "Statement": [
-			   {
-				   "Sid": "Dome9ReadOnly",
-				   "Action": [
-              "cloudtrail:LookupEvents",
-              "elasticfilesystem:Describe*",
-              "firehose:Describe*",
-              "firehose:List*",
-              "guardduty:Get*",
-              "guardduty:List*",
-              "kinesis:List*",
-              "kinesis:Describe*",
-              "kinesisvideo:Describe*",
-              "kinesisvideo:List*",
-              "logs:Describe*",
-              "logs:Get*",
-              "logs:FilterLogEvents",
-              "lambda:List*",
-              "s3:List*",
-              "sns:ListSubscriptions",
-              "sns:ListSubscriptionsByTopic"
-				   ],
-				   "Effect": "Allow",
-				   "Resource": "*"
-			   }
-		   ]
-		}
-      }
-    },
-    "Dome9FullManage": {
-      "Type": "AWS::IAM::Policy",
-      "Properties": {
-        "Roles": [
-          {
-            "Ref": "Role"
-          }
-        ],
-        "PolicyName": "Dome9FullManage",
-        "PolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Sid": "Dome9FullManage",
-              "Action": [
-                "ec2:AuthorizeSecurityGroupEgress",
-                "ec2:AuthorizeSecurityGroupIngress",
-                "ec2:CreateSecurityGroup",
-                "ec2:DeleteSecurityGroup",
-                "ec2:RevokeSecurityGroupEgress",
-                "ec2:RevokeSecurityGroupIngress",
-                "ec2:ModifyNetworkInterfaceAttribute",
-                "ec2:CreateTags",
-                "ec2:DeleteTags"
-              ],
-              "Effect": "Allow",
-              "Resource": "*"
-            }
-          ]
-        }
-      }
-    }
-  },
-  "Parameters": {
-    "Externalid": {
-      "Type": "String",
-      "Description": "Enter Dome9 External ID"
-    }
-  },
-  "Outputs": {
-    "RoleARNID": {
-      "Description": "Your Role ARN ID",
-      "Value": {
-        "Fn::GetAtt": [
-          "Role",
-          "Arn"
-        ]
-      }
-    },
-    "ExternalID": {
-      "Description": "Your External ID",
-      "Value": {
-        "Ref": "Externalid"
-      }
-    }
-  }
-}
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/SecurityAudit
+      - arn:aws:iam::aws:policy/AmazonInspectorReadOnlyAccess
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            AWS: arn:aws:iam::634729597623:root
+          Action: sts:AssumeRole
+          Condition:
+            StringEquals:
+              sts:ExternalId:
+                Ref: Externalid
+  ReadOnlyPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: Dome9Readonly
+      Roles:
+      - Ref: Role
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: Dome9ReadOnly
+          Action:
+          - cloudtrail:LookupEvents
+          - elasticfilesystem:Describe*
+          - firehose:Describe*
+          - firehose:List*
+          - guardduty:Get*
+          - guardduty:List*
+          - kinesis:List*
+          - kinesis:Describe*
+          - kinesisvideo:Describe*
+          - kinesisvideo:List*
+          - logs:Describe*
+          - logs:Get*
+          - logs:FilterLogEvents
+          - lambda:List*
+          - s3:List*
+          - sns:ListSubscriptions
+          - sns:ListSubscriptionsByTopic
+          Effect: Allow
+          Resource: "*"
+  Dome9FullManage:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+      - Ref: Role
+      PolicyName: Dome9FullManage
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: Dome9FullManage
+          Action:
+          - ec2:AuthorizeSecurityGroupEgress
+          - ec2:AuthorizeSecurityGroupIngress
+          - ec2:CreateSecurityGroup
+          - ec2:DeleteSecurityGroup
+          - ec2:RevokeSecurityGroupEgress
+          - ec2:RevokeSecurityGroupIngress
+          - ec2:ModifyNetworkInterfaceAttribute
+          - ec2:CreateTags
+          - ec2:DeleteTags
+          Effect: Allow
+          Resource: "*"
+Parameters:
+  Externalid:
+    Type: String
+    Description: Enter Dome9 External ID
+Outputs:
+  RoleARNID:
+    Description: Your Role ARN ID
+    Value:
+      Fn::GetAtt:
+      - Role
+      - Arn
+  ExternalID:
+    Description: Your External ID
+    Value:
+      Ref: Externalid
