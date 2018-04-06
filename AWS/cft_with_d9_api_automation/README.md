@@ -39,6 +39,8 @@ pip install boto3 requests
 
 - This concludes the dependencies required.
 
+- Side note: When manually setting up an account, you need to paste in the external ID that Dome9 generates. In this application, the script generates the external ID and applies it to AWS and Dome9. There's no need to worry about adding in the external ID anywhere when using this script. 
+
 ## Operation
 
 ### Call the script like this:
