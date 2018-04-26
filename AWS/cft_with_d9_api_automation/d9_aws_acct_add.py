@@ -42,6 +42,10 @@ def run():
     awssecret = config.get('aws', 'awssecret')
     region_name = config.get('aws', 'region_name')
 
+    if d9id or d9secret or d9mode or awskey or awssecret == "":
+        print ('Please ensure that all config settings in d9_aws_acct_add.conf are set.')
+        sys.exit()
+
     if d9mode == ('readonly'):
         cfts3path = config.get('aws', 'cfts3pathro')
         d9readonly = ('true')
