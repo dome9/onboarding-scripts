@@ -30,7 +30,9 @@ Resources:
         - Sid: Dome9ReadOnly
           Action:
           - cloudtrail:LookupEvents
+          - dynamodb:DescribeTable
           - elasticfilesystem:Describe*
+          - elasticache:ListTagsForResource
           - firehose:Describe*
           - firehose:List*
           - guardduty:Get*
