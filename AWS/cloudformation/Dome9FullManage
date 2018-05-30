@@ -48,6 +48,7 @@ Resources:
           - s3:List*
           - sns:ListSubscriptions
           - sns:ListSubscriptionsByTopic
+          - waf-regional:ListResourcesForWebACL
           Effect: Allow
           Resource: "*"
   Dome9FullManage:
