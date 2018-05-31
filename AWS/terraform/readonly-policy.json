@@ -22,7 +22,7 @@
                 "lambda:List*",
                 "s3:List*",
                 "sns:ListSubscriptions",
-                "sns:ListSubscriptionsByTopic"
+                "sns:ListSubscriptionsByTopic",
                 "waf-regional:ListResourcesForWebACL"
             ],
             "Effect": "Allow",

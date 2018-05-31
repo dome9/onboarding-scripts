@@ -39,16 +39,14 @@ resource "aws_iam_policy_attachment" "attach-d9-read-policy" {
   policy_arn = "${aws_iam_policy.readonly-policy.arn}"
 }
 
-resource "aws_iam_policy_attachment" "attach-security-audit" {
-  name       = "attach-security-audit"
-  roles      = ["${aws_iam_role.dome9.name}"]
-  policy_arn = "arn:aws:iam::aws:policy/SecurityAudit"
+resource "aws_iam_role_policy_attachment" "attach-security-audit" {
+    role       = "${aws_iam_role.dome9.name}"
+    policy_arn = "arn:aws:iam::aws:policy/SecurityAudit"
 }
 
-resource "aws_iam_policy_attachment" "attach-inspector-readonly" {
-  name       = "attach-inspector-readonly"
-  roles      = ["${aws_iam_role.dome9.name}"]
-  policy_arn = "arn:aws:iam::aws:policy/AmazonInspectorReadOnlyAccess"
+resource "aws_iam_role_policy_attachment" "attach-inspector-readonly" {
+    role       = "${aws_iam_role.dome9.name}"
+    policy_arn = "arn:aws:iam::aws:policy/AmazonInspectorReadOnlyAccess"
 }
 
 

@@ -52,16 +52,14 @@ resource "aws_iam_policy_attachment" "attach-d9-write-policy" {
   policy_arn = "${aws_iam_policy.write-policy.arn}"
 }
 
-resource "aws_iam_policy_attachment" "attach-security-audit" {
-  name       = "Attach-readonly"
-  roles      = ["${aws_iam_role.dome9.name}"]
-  policy_arn = "arn:aws:iam::aws:policy/SecurityAudit"
+resource "aws_iam_role_policy_attachment" "attach-security-audit" {
+    role       = "${aws_iam_role.dome9.name}"
+    policy_arn = "arn:aws:iam::aws:policy/SecurityAudit"
 }
 
-resource "aws_iam_policy_attachment" "attach-inspector-readonly" {
-  name       = "Attach-readonly"
-  roles      = ["${aws_iam_role.dome9.name}"]
-  policy_arn = "arn:aws:iam::aws:policy/AmazonInspectorReadOnlyAccess"
+resource "aws_iam_role_policy_attachment" "attach-inspector-readonly" {
+    role       = "${aws_iam_role.dome9.name}"
+    policy_arn = "arn:aws:iam::aws:policy/AmazonInspectorReadOnlyAccess"
 }
 
 #Output the role ARN
