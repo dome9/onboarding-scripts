@@ -3,12 +3,9 @@
 # *******************************************************************************
 # Name: d9_aws_acct_add.py
 # Description: A simple Dome9 script to automate the addition of an AWS account
-# to a Dome9 account - including the AWS dependencies via CloudFormation template
-# Author: Patrick Pushor
-# todo : lambda-ize and package this via ?, add more error handling and logging
+# to a Dome9 account.
 #
-# Copywrite 2018, Dome9 Security
-# www.dome9.com - secure your cloud
+# Copywrite 2019, Check Point Software
 # *******************************************************************************
 
 import json
