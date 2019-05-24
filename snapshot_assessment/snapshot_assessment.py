@@ -196,13 +196,13 @@ def main(argv=None):
         arnparse = OPTIONS.arn.split(':')
         extaccountid = arnparse[4]
         print('Cloud Account ID: ' + extaccountid)
-        #account_added = add_aws_account(d9id, d9secret, OPTIONS.accountname, OPTIONS.arn, OPTIONS.externalid)
-        account_added = '786df20e-1bed-4615-9d19-98da3255fa0c' #testing
+        account_added = add_aws_account(OPTIONS.accountname, OPTIONS.arn, OPTIONS.externalid)
 
         if account_added:
             print('Waiting for initial account sync')
             #syncwait = OPTIONS.sync * 60
             #sleep(syncwait)
+            sleep(60)
             notification_name = OPTIONS.accountname + '_' + ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(5))
             notification_policy_added = add_notification_policy(notification_name, OPTIONS.email)
             cc_policy_added = add_cc_policy(account_added, extaccountid, notification_policy_added, rulesetid)

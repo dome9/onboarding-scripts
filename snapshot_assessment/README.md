@@ -26,7 +26,7 @@ AWS is only supported in this beta and defaults to the NIST 800-53 ruleset.
 1. Using console, navigate to this tools directory (`onboarding-scripts/snapshot_assessment`)
 2. Run the command 
 ```
-Syntax: python <aws|azure|gcp> [options] 
+Syntax: python snapshot_assessment.py <aws|azure|gcp> [options] 
 python snapshot_assessment.py aws --name testaccount --arn arn:aws:iam::012345678912:role/Dome9-Connect --externalid bkbj00xuTAM102IceF0s8bX6 --email user@domain.com
 ```
 
