@@ -22,16 +22,30 @@ AWS is only supported in this beta and defaults to the NIST 800-53 ruleset.
 
 
 ## How to run ##
-1. Using console, navigate to this tools directory (`onboarding-scripts/snapshot_assessment`)
+1. Using console, navigate to the respective directory (`onboarding-scripts/snapshot_assessment`)
 2. Run the command 
 ```
 Syntax: python snapshot_assessment.py <aws|azure|gcp> [options] 
 python snapshot_assessment.py aws --name testaccount --arn arn:aws:iam::012345678912:role/Dome9-Connect --externalid bkbj00xuTAM102IceF0s8bX6 --email user@domain.com --delay 30
 ```
+### Command Line <modes> ###
+The mode indiciates the public cloud provider type of the target account being assessed:
+* aws : Amazon Web Services
+* azure : Microsoft Azure
+* gcp : Google Cloud Platform
 
-### Command Line arguments ###
+### Command Line [options] ###
+General
 * --name : Friendly name of the account you are onboarding (No spaces) (**required**).
-* --arn : The role ARN of the AWS Dome9-Connect role (**required**). 
-* --externalid : The external ID used when created the AWS Dome9-Connect role (**required**).
 * --email : E-mail address to send compliance report (**required**).
 * --delay : Delay (in minutes) to wait for initial cloud account sync to complete. Default is 30.
+AWS
+* --arn : The role ARN of the AWS Dome9-Connect role (**required**). 
+* --externalid : The external ID used when creating the AWS Dome9-Connect role (**required**).
+Azure
+* --subscriptionid : Azure Subscription ID (**required**)
+* --tenandid : Azure AD/Tenant ID (**required**)
+* --appid : Azure App (Client) ID for Dome9 App Registration (**required**)
+* --key : Azure App (Client) Secret Key for Dome9 App Registration (**required**)
+
+
