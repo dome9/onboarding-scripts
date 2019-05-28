@@ -39,10 +39,12 @@ General
 * --name : Friendly name of the account you are onboarding (No spaces) (**required**).
 * --email : E-mail address to send compliance report (**required**).
 * --delay : Delay (in minutes) to wait for initial cloud account sync to complete. Default is 30.
-AWS
+
+AWS Mode
 * --arn : The role ARN of the AWS Dome9-Connect role (**required**). 
 * --externalid : The external ID used when creating the AWS Dome9-Connect role (**required**).
-Azure
+
+Azure Mode
 * --subscriptionid : Azure Subscription ID (**required**)
 * --tenandid : Azure AD/Tenant ID (**required**)
 * --appid : Azure App (Client) ID for Dome9 App Registration (**required**)
