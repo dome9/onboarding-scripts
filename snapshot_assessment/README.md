@@ -3,7 +3,7 @@ A command line tool to run a Dome9, one-time, snapshot compliance assessment of 
 AWS, Microsoft Azure, and Google Cloud Platform (GCP) are supported. The default total runtime is about 50 minutes and will auto-cleanup upon completion.
 
 ## Tool Process Summary ##
-The following is explains what the tool does in sequence:
+The following explains what this tool does in sequence:
 1. Onboards an account into Dome9 using the API
 2. Waits 30 minutes for initial account sync to complete 
 3. Schedules a compliance assessment report to be emailed
@@ -27,7 +27,7 @@ The following is explains what the tool does in sequence:
    * [ ] Secret Key for App Registration. e.g. ```1HmMAz[PLyAm/u/9gW+V8xb33c654321```
 * GCP project with Dome9-Connect service account. 
    * [ ] Create permissions for Dome9. [Manual](https://helpcenter.dome9.com/hc/en-us/articles/360003962974-Onboard-a-Google-Cloud-Project-to-Dome9) | [Script](https://github.com/Dome9/onboarding-scripts/tree/master/GCP) 
-   * [ ] API Service Account credential key file in JSON format. e.g. ```myfile.json```
+   * [ ] API Service Account credential key file in JSON format. e.g. ```mykey.json```
 
 ## Installation ##
 1. Clone this repo into your local machine
@@ -66,13 +66,13 @@ python snapshot_assessment.py azure --name testazureaccount --email user@domain.
 # GCP Example
 python snapshot_assessment.py azure --name testgcpaccount --email name@domain.com --keyfile ./mykey.json
 ```
-#### Command Line Modes ####
+### Command Line Modes ###
 The mode indicates the public cloud provider type of the target account being assessed:
 * ```aws``` : Amazon Web Services
 * ```azure``` : Microsoft Azure
 * ```gcp``` : Google Cloud Platform
 
-#### Command Line Options ####
+### Command Line Options ###
 Common Options
 * ```--name``` : Friendly name of the cloud account (No spaces) (**required**)
 * ```--email``` : E-mail address to send compliance report (**required**)

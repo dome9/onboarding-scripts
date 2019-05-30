@@ -124,7 +124,7 @@ def add_notification_policy(name, email, cronexpression):
     urldata = {"name":name,"description":"","alertsConsole":False,"scheduledReport":{"emailSendingState":"Enabled","scheduleData":{"cronExpression":cronexpression,"type":"Detailed","recipients":[email]}},"changeDetection":{"emailSendingState":"Disabled","emailPerFindingSendingState":"Disabled","snsSendingState":"Disabled","externalTicketCreatingState":"Disabled","awsSecurityHubIntegrationState":"Disabled"},"gcpSecurityCommandCenterIntegration":{"state":"Disabled"}}
     headers = {'content-type': 'application/json'}
 
-    print('\nCreating Notification Policy...')
+    print('\n\nCreating Notification Policy...')
     
     try:
         resp = requests.post(url, auth=HTTPBasicAuth(d9id, d9secret), json=urldata, headers=headers)
@@ -189,7 +189,7 @@ def run_assessment(d9cloudaccountid, rulesetid):
     url = "https://api.dome9.com/v2/assessment/bundleV2"
     urldata = {"Id": rulesetid, "CloudAccountId": d9cloudaccountid, "CloudAccountType": cloudid, "Region":""}
     headers = {'content-type': 'application/json'}
-    print('\nRunning Compliance Assessment: ' + str(rulesetid))
+    print('\nRunning Compliance Assessment using ruleset id: ' + str(rulesetid))
 
     try:
         resp = requests.post(url, auth=HTTPBasicAuth(d9id, d9secret), json=urldata, headers=headers)
