@@ -16,6 +16,7 @@ from datetime import timedelta
 d9id = ''
 d9secret = ''
 cloudid = ''
+mode = ''
 print('\n:: Dome9 Snapshot Assessment :: \nExecution time: ' + str(datetime.now()) + '\n')
 
 def add_aws_account(name, arn, extid):
@@ -84,8 +85,38 @@ def add_azure_account(name, subscriptionid, tenantid, appid, appkey):
         print(resp)
         return False
 
-def add_gcp_account():
-    print('test')
+def add_gcp_account(name, key):
+    
+    url = "https://api.dome9.com/v2//GoogleCloudAccount"
+    urldata = {"name":name,"serviceAccountCredentials":key}
+    headers = {'content-type': 'application/json'}
+
+    print('\nAdding target GCP project to Dome9...')
+
+    try:
+        resp = requests.post(url, auth=HTTPBasicAuth(d9id, d9secret), json=urldata, headers=headers)
+        
+        # If the response was successful, no Exception will be raised
+        resp.raise_for_status()
+    except HTTPError as http_err:
+        print(f'HTTP error occurred: {http_err}') 
+    except Exception as err:
+        print(f'Other error occurred: {err}') 
+    else:
+        print('Success!')
+    
+    if resp.status_code == 201:
+        resp = json.loads(resp.content)
+        print('GCP Project added successfully, id: ' + resp['id'])
+        return resp['id']
+    
+    elif resp.status_code == 400:
+        print('GCP Project already added or bad request. Please remove from Dome9 before using this script.')
+
+    else:
+        print('Error when attempting to add GCP Project.')
+        print(resp)
+        return False
         
 def add_notification_policy(name, email, cronexpression):
 
@@ -186,14 +217,14 @@ def remove_cloud_account(id):
 
     print('\nRemoving Cloud Account...')
     
-    if cloudid == 1:
+    if mode == 'aws':
         url = "https://api.dome9.com/v2/cloudaccounts/" + id
-    elif cloudid == 7:
+    elif mode == 'azure':
         url = "https://api.dome9.com/v2/AzureCloudAccount/" + id
-    elif cloudid == 8:
+    elif mode == 'gcp':
         url = "https://api.dome9.com/v2/GoogleCloudAccount/" + id
     else:
-        print('Invalid cloud provider parameter: ' + cloudprovider)
+        print('Invalid cloud provider mode: ' + mode)
         return False
 
     urldata = {}
@@ -248,7 +279,27 @@ def delete_notification_policy(id):
         print(f'Other error occurred: {err}') 
     else:
         print('Success!')    
-        
+
+def process_account(account_added, extaccountid):
+
+    print('\nWaiting ' + OPTIONS.delay + ' minutes for cloud sync to complete.')
+    syncwait = int(OPTIONS.delay) * 60
+    countdown(syncwait)
+
+    notification_name = OPTIONS.accountname + '_snapshot_' + ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(5))
+    utc_datetime = (datetime.utcnow() + timedelta(minutes=5))
+    cronexpression = '0 ' + str(utc_datetime.minute) + ' ' + str(utc_datetime.hour) + ' 1/1 * ? *'
+    notification_policy_added = add_notification_policy(notification_name, OPTIONS.email, cronexpression)
+
+    cc_policy_added = add_cc_policy(account_added, extaccountid, notification_policy_added, OPTIONS.rulesetid)
+    run_assessment(account_added, OPTIONS.rulesetid)
+
+    print('\nEmail report delivery pending. \nWaiting 20 minutes...')
+    countdown(1200)
+    unassociate_cc_policy(cc_policy_added)
+    delete_notification_policy(notification_policy_added)
+    remove_cloud_account(account_added) 
+ 
 def countdown(t):
     while t:
         mins, secs = divmod(t, 60)
@@ -260,7 +311,7 @@ def countdown(t):
 # Main
 def main(argv=None):
 
-    global OPTIONS, d9id, d9secret, cloudid
+    global OPTIONS, d9id, d9secret, mode, cloudid
     account_added = ''
     notification_added = ''
 
@@ -289,12 +340,12 @@ def main(argv=None):
     elif mode == 'azure':
         parser.add_argument("--subscriptionid", dest="subscriptionid", help="Azure Subscription ID *")
         parser.add_argument("--tenantid", dest="tenantid", help="Azure AD/Tenant ID *")
-        parser.add_argument("--appid", dest="appid", help="Azure App (Client) ID for Dome9 App Registration *")
-        parser.add_argument("--key", dest="key", help="Azure App (Client) Secret Key for Dome9 App Registration *")
+        parser.add_argument("--appid", dest="appid", help="Azure App (Client) ID for App Registration *")
+        parser.add_argument("--key", dest="key", help="Azure App (Client) Secret Key for Azure App Registration *")
         parser.add_argument("--rulesetid", dest="rulesetid", default=-23, help="Azure-specific Dome9 Compliance Ruleset ID. Default: -23 (NIST 800-53)")
 
     elif mode == 'gcp':
-        parser.add_argument("--key", dest="key", help="GCP private key for Dome9 service account")
+        parser.add_argument("--keyfile", dest="keyfile", help="Path to GCP key file in JSON format of the Dome9 service account")
         parser.add_argument("--rulesetid", dest="rulesetid", default=-25, help="GCP-specific Dome9 Compliance Ruleset ID. Default: -25 (NIST 800-53)")
     
     parser.add_argument("--email", dest="email", help="E-mail Address *")
@@ -316,56 +367,55 @@ def main(argv=None):
         os._exit(1)
 
     if mode == 'aws':
+        if not OPTIONS.arn or not OPTIONS.externalid:
+            print("ERROR: Missing required arguments for mode 'aws'\n")        
+            parser.print_help()
+            os._exit(1)
+
         cloudid = 1
         arnparse = OPTIONS.arn.split(':')
         extaccountid = arnparse[4]
-        syncwait = int(OPTIONS.delay)
+
         print('Cloud Account \n-ID: ' + extaccountid + '\n-Name: ' + OPTIONS.accountname)
         account_added = add_aws_account(OPTIONS.accountname, OPTIONS.arn, OPTIONS.externalid)
 
         if account_added:
-            print('\nWaiting ' + OPTIONS.delay + ' minutes for cloud sync to complete.')
-            syncwait = syncwait * 60
-            countdown(syncwait)
-
-            notification_name = OPTIONS.accountname + '_snapshot_' + ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(5))
-            utc_datetime = (datetime.utcnow() + timedelta(minutes=5))
-            cronexpression = '0 ' + str(utc_datetime.minute) + ' ' + str(utc_datetime.hour) + ' 1/1 * ? *'
-            notification_policy_added = add_notification_policy(notification_name, OPTIONS.email, cronexpression)
-
-            cc_policy_added = add_cc_policy(account_added, extaccountid, notification_policy_added, OPTIONS.rulesetid)
-            run_assessment(account_added, OPTIONS.rulesetid)
-
-            print('\nWaiting 20 minutes to initiate cleanup actions (compliance report should arrive by email by this time).')
-            countdown(1200)
-            unassociate_cc_policy(cc_policy_added)
-            delete_notification_policy(notification_policy_added)
-            remove_cloud_account(account_added)
+            process_account(account_added, extaccountid)
 
     elif mode == 'azure':
+        if not OPTIONS.subscriptionid or not OPTIONS.tenantid or not OPTIONS.appid or not OPTIONS.key:
+            print("ERROR: Missing required arguments for mode 'azure'\n")        
+            parser.print_help()
+            os._exit(1)
+
         cloudid = 7
-        syncwait = int(OPTIONS.delay)
+
         print('Cloud Account \n-ID: ' + OPTIONS.subscriptionid + '\n-Name: ' + OPTIONS.accountname)
         account_added = add_azure_account(OPTIONS.accountname, OPTIONS.subscriptionid, OPTIONS.tenantid, OPTIONS.appid, OPTIONS.key)
 
         if account_added:
-            print('\nWaiting ' + OPTIONS.delay + ' minutes for initial account sync to complete.')
-            syncwait = syncwait * 60
-            countdown(syncwait)
+            process_account(account_added, OPTIONS.subscriptionid)
 
-            notification_name = OPTIONS.accountname + '_snapshot_' + ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(5))
-            utc_datetime = (datetime.utcnow() + timedelta(minutes=5))
-            cronexpression = '0 ' + str(utc_datetime.minute) + ' ' + str(utc_datetime.hour) + ' 1/1 * ? *'
-            notification_policy_added = add_notification_policy(notification_name, OPTIONS.email, cronexpression)
+    elif mode == 'gcp':
+        if not OPTIONS.keyfile:
+            print("ERROR: Missing required arguments for mode 'gcp'\n")        
+            parser.print_help()
+            os._exit(1)
 
-            cc_policy_added = add_cc_policy(account_added, OPTIONS.subscriptionid, notification_policy_added, OPTIONS.rulesetid)
-            run_assessment(account_added, OPTIONS.rulesetid)
+        keyfileexists = os.path.isfile(OPTIONS.keyfile)
+        if not keyfileexists:
+            print("GCP key file not found on disk: " + OPTIONS.keyfile)
+            os._exit(1)
 
-            print('\nWaiting 20 minutes to initiate cleanup actions (compliance report should arrive by email by this time).')
-            countdown(1200)
-            unassociate_cc_policy(cc_policy_added)
-            delete_notification_policy(notification_policy_added)
-            remove_cloud_account(account_added)
+        cloudid = 10
+        with open(OPTIONS.keyfile) as json_file:
+            key = json.load(json_file)
+
+        print('Cloud Account \n-ID: ' + key['project_id'] + '\n-Name: ' + OPTIONS.accountname)
+        account_added = add_gcp_account(OPTIONS.accountname, key)
+
+        if account_added:
+            process_account(account_added, key['project_id'])
 
     return 0
 
