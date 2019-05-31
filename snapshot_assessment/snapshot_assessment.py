@@ -17,31 +17,19 @@ d9id = ''
 d9secret = ''
 cloudid = ''
 mode = ''
-print('\n:: Dome9 Snapshot Assessment :: \nExecution time: ' + str(datetime.now()) + '\n')
+print('\n:: Dome9 Snapshot Compliance Assessment :: \nExecution time: ' + str(datetime.now()) + '\n')
 
 def add_aws_account(name, arn, extid):
 
     url = "https://api.dome9.com/v2/CloudAccounts"
-    urldata = {"name": name, "credentials": {"arn": arn, "secret": extid, "type": "RoleBased", "isReadOnly": "true"}, "fullProtection": "false"}
-    headers = {'content-type': 'application/json'}
+    payload = {"name": name, "credentials": {"arn": arn, "secret": extid, "type": "RoleBased", "isReadOnly": "true"}, "fullProtection": "false"}
 
     print('\nAdding target AWS account to Dome9...')
-
-    try:
-        resp = requests.post(url, auth=HTTPBasicAuth(d9id, d9secret), json=urldata, headers=headers)
-        
-        # If the response was successful, no Exception will be raised
-        resp.raise_for_status()
-    except HTTPError as http_err:
-        print(f'HTTP error occurred: {http_err}') 
-    except Exception as err:
-        print(f'Other error occurred: {err}') 
-    else:
-        print('Success!')
+    resp = http_request('post', url, payload, False)
     
     if resp.status_code == 201:
         resp = json.loads(resp.content)
-        print('AWS account added successfully, id: ' + resp['id'])
+        print('AWS account added successfully.')
         return resp['id']
     
     elif resp.status_code == 400:
@@ -55,26 +43,14 @@ def add_aws_account(name, arn, extid):
 def add_azure_account(name, subscriptionid, tenantid, appid, appkey):
 
     url = "https://api.dome9.com/v2/AzureCloudAccount"
-    urldata = {"name":name,"subscriptionId":subscriptionid,"tenantId":tenantid,"credentials":{"clientId":appid,"clientPassword":appkey},"operationMode":"Read"}
-    headers = {'content-type': 'application/json'}
+    payload = {"name":name,"subscriptionId":subscriptionid,"tenantId":tenantid,"credentials":{"clientId":appid,"clientPassword":appkey},"operationMode":"Read"}
 
     print('\nAdding target Azure subscription to Dome9...')
-
-    try:
-        resp = requests.post(url, auth=HTTPBasicAuth(d9id, d9secret), json=urldata, headers=headers)
-        
-        # If the response was successful, no Exception will be raised
-        resp.raise_for_status()
-    except HTTPError as http_err:
-        print(f'HTTP error occurred: {http_err}') 
-    except Exception as err:
-        print(f'Other error occurred: {err}') 
-    else:
-        print('Success!')
+    resp = http_request('post', url, payload, False)
     
     if resp.status_code == 201:
         resp = json.loads(resp.content)
-        print('Azure Subscription added successfully, id: ' + resp['id'])
+        print('Azure Subscription added successfully.')
         return resp['id']
     
     elif resp.status_code == 400:
@@ -88,26 +64,14 @@ def add_azure_account(name, subscriptionid, tenantid, appid, appkey):
 def add_gcp_account(name, key):
     
     url = "https://api.dome9.com/v2/GoogleCloudAccount"
-    urldata = {"name":name,"serviceAccountCredentials":key}
-    headers = {'content-type': 'application/json'}
+    payload = {"name":name,"serviceAccountCredentials":key}
 
     print('\nAdding target GCP project to Dome9...')
-
-    try:
-        resp = requests.post(url, auth=HTTPBasicAuth(d9id, d9secret), json=urldata, headers=headers)
-        
-        # If the response was successful, no Exception will be raised
-        resp.raise_for_status()
-    except HTTPError as http_err:
-        print(f'HTTP error occurred: {http_err}') 
-    except Exception as err:
-        print(f'Other error occurred: {err}') 
-    else:
-        print('Success!')
+    resp = http_request('post', url, payload, False)
     
     if resp.status_code == 201:
         resp = json.loads(resp.content)
-        print('GCP Project added successfully, id: ' + resp['id'])
+        print('GCP Project added successfully.')
         return resp['id']
     
     elif resp.status_code == 400:
@@ -121,32 +85,16 @@ def add_gcp_account(name, key):
 def add_notification_policy(name, email, cronexpression):
 
     url = "https://api.dome9.com/v2/Compliance/ContinuousComplianceNotification"
-    urldata = {"name":name,"description":"","alertsConsole":False,"scheduledReport":{"emailSendingState":"Enabled","scheduleData":{"cronExpression":cronexpression,"type":"Detailed","recipients":[email]}},"changeDetection":{"emailSendingState":"Disabled","emailPerFindingSendingState":"Disabled","snsSendingState":"Disabled","externalTicketCreatingState":"Disabled","awsSecurityHubIntegrationState":"Disabled"},"gcpSecurityCommandCenterIntegration":{"state":"Disabled"}}
-    headers = {'content-type': 'application/json'}
+    payload = {"name":name,"description":"","alertsConsole":False,"scheduledReport":{"emailSendingState":"Enabled","scheduleData":{"cronExpression":cronexpression,"type":"Detailed","recipients":[email]}},"changeDetection":{"emailSendingState":"Disabled","emailPerFindingSendingState":"Disabled","snsSendingState":"Disabled","externalTicketCreatingState":"Disabled","awsSecurityHubIntegrationState":"Disabled"},"gcpSecurityCommandCenterIntegration":{"state":"Disabled"}}
 
     print('\nCreating Notification Policy...')
-    
-    try:
-        resp = requests.post(url, auth=HTTPBasicAuth(d9id, d9secret), json=urldata, headers=headers)
-        
-        # If the response was successful, no Exception will be raised
-        resp.raise_for_status()
-    except HTTPError as http_err:
-        print(f'HTTP error occurred: {http_err}') 
-    except Exception as err:
-        print(f'Other error occurred: {err}') 
-    else:
-        print('Success!')
+    resp = http_request('post', url, payload, False)
 
     if resp.status_code == 201:
         resp = json.loads(resp.content)
-        print('Dome9 Notification policy added successfully. name: ' + name + ', id: ' + resp['id'])
+        print('Dome9 Notification policy added successfully. name: ' + name + '')
         return resp['id']
     
-    elif resp.status_code == 400:
-        print('Dome9 Notification policy bad request.')
-        print('resp')
-
     else:
         print('Error when attempting to add Notification policy.')
         print(resp)
@@ -155,30 +103,15 @@ def add_notification_policy(name, email, cronexpression):
 def add_cc_policy(d9cloudaccountid, extaccountid, notificationid, rulesetid):
 
     url = "https://api.dome9.com/v2/Compliance/ContinuousCompliancePolicy/ContinuousCompliancePolicies"
-    urldata = [{"cloudAccountId":d9cloudaccountid,"bundleId":rulesetid,"externalAccountId":extaccountid,"cloudAccountType":cloudid,"notificationIds":[notificationid],"product":"compliance"}]
-    headers = {'content-type': 'application/json'}
-    print('\nCreating Continuous Compliance Policy...')
+    payload = [{"cloudAccountId":d9cloudaccountid,"bundleId":rulesetid,"externalAccountId":extaccountid,"cloudAccountType":cloudid,"notificationIds":[notificationid],"product":"compliance"}]
 
-    try:
-        resp = requests.post(url, auth=HTTPBasicAuth(d9id, d9secret), json=urldata, headers=headers)
-        
-        # If the response was successful, no Exception will be raised
-        resp.raise_for_status()
-    except HTTPError as http_err:
-        print(f'HTTP error occurred: {http_err}') 
-    except Exception as err:
-        print(f'Other error occurred: {err}') 
-    else:
-        print('Success!')
+    print('\nCreating Continuous Compliance Policy...')
+    resp = http_request('post', url, payload, False)
 
     if resp.status_code == 201:
         resp = json.loads(resp.content)
-        print('Dome9 Continuous Compliance policy added successfully. id: ' + resp[0]['id'])
+        print('Dome9 Continuous Compliance policy added successfully.')
         return resp[0]['id']
-    
-    elif resp.status_code == 400:
-        print('Dome9 Continuous Compliance policy bad request.')
-        print(resp)
 
     else:
         print('Error when attempting to add Continuous Compliance policy.')
@@ -186,26 +119,16 @@ def add_cc_policy(d9cloudaccountid, extaccountid, notificationid, rulesetid):
         return False
 
 def run_assessment(d9cloudaccountid, rulesetid):
-    url = "https://api.dome9.com/v2/assessment/bundleV2"
-    urldata = {"Id": rulesetid, "CloudAccountId": d9cloudaccountid, "CloudAccountType": cloudid, "Region":""}
-    headers = {'content-type': 'application/json'}
-    print('\nRunning Compliance Assessment using ruleset id: ' + str(rulesetid))
 
-    try:
-        resp = requests.post(url, auth=HTTPBasicAuth(d9id, d9secret), json=urldata, headers=headers)
-        
-        # If the response was successful, no Exception will be raised
-        resp.raise_for_status()
-    except HTTPError as http_err:
-        print(f'HTTP error occurred: {http_err}') 
-    except Exception as err:
-        print(f'Other error occurred: {err}') 
-    else:
-        print('Success!')
+    url = "https://api.dome9.com/v2/assessment/bundleV2"
+    payload = {"Id": rulesetid, "CloudAccountId": d9cloudaccountid, "CloudAccountType": cloudid, "Region":""}
+
+    print('\nRunning Compliance Assessment using ruleset id: ' + str(rulesetid))
+    resp = http_request('post', url, payload, False)
 
     if resp.status_code == 200:
         resp = json.loads(resp.content)
-        print('Compliance Assessment completed successfully. \nView ephemeral report at: https://secure.dome9.com/v2/compliance-engine/result/' + str(resp['id']))
+        print('Compliance Assessment completed successfully. \nView ephemeral report at: \nhttps://secure.dome9.com/v2/compliance-engine/result/' + str(resp['id']))
         return True
     
     else:
@@ -227,84 +150,39 @@ def remove_cloud_account(id):
         print('Invalid cloud provider mode: ' + mode)
         return False
 
-    urldata = {}
-    headers = {'content-type': 'application/json'}
+    payload = {}
 
-    try:
-        resp = requests.delete(url, auth=HTTPBasicAuth(d9id, d9secret), json=urldata, headers=headers)
-        
-        # If the response was successful, no Exception will be raised
-        resp.raise_for_status()
-    except HTTPError as http_err:
-        print(f'HTTP error occurred: {http_err}') 
-    except Exception as err:
-        print(f'Other error occurred: {err}') 
-    else:
-        print('Success!')
+    resp = http_request('delete', url, payload, False)
     
 def unassociate_cc_policy(id):
 
     url = "https://api.dome9.com/v2/Compliance/ContinuousCompliancePolicy/" + id
-    urldata = {}
-    headers = {'content-type': 'application/json'}
-    print('\nUnassociating Compliance Policy...')
+    payload = {}
 
-    try:
-        resp = requests.delete(url, auth=HTTPBasicAuth(d9id, d9secret), json=urldata, headers=headers)
-        
-        # If the response was successful, no Exception will be raised
-        resp.raise_for_status()
-    except HTTPError as http_err:
-        print(f'HTTP error occurred: {http_err}') 
-    except Exception as err:
-        print(f'Other error occurred: {err}') 
-    else:
-        print('Success!')
+    print('\nUnassociating Compliance Policy from cloud account...')
+    resp = http_request('delete', url, payload, False)
     
 def delete_notification_policy(id):
 
     url = "https://api.dome9.com/v2/Compliance/ContinuousComplianceNotification/" + id
-    urldata = {}
-    headers = {'content-type': 'application/json'}
-    print('\nDeleting Notification Policy...')
+    payload = {}
 
-    try:
-        resp = requests.delete(url, auth=HTTPBasicAuth(d9id, d9secret), json=urldata, headers=headers)
+    print('\nDeleting Notification Policy...')
+    resp = http_request('delete', url, payload, False)
         
-        # If the response was successful, no Exception will be raised
-        resp.raise_for_status()
-    except HTTPError as http_err:
-        print(f'HTTP error occurred: {http_err}') 
-    except Exception as err:
-        print(f'Other error occurred: {err}') 
-    else:
-        print('Success!')    
-        
-def get_scheduled_report_status(targetstring, email):
+def get_scheduled_report_status(np_name, email):
     startdatetime = datetime.utcnow() + timedelta(hours=-2)
     enddatetime = datetime.utcnow() + timedelta(hours=2)
 
     url = 'https://api.dome9.com/v2/Audit?&eventType=AssessmentScheduledReportSentEvent&eventsPerPage=100&fim=false&pageNum=1&startTimestamp=' + str(startdatetime.date()) + 'T' + str(startdatetime.time()) + 'Z&endTimestamp=' + str(enddatetime.date()) + 'T' + str(enddatetime.time()) + 'Z'
-    urldata = {}
-    headers = {'content-type': 'application/json'}
-    #print('Querying Audit Trail...')
+    payload = {}
 
-    try:
-        resp = requests.get(url, auth=HTTPBasicAuth(d9id, d9secret), json=urldata, headers=headers)
-        
-        # If the response was successful, no Exception will be raised
-        resp.raise_for_status()
-    except HTTPError as http_err:
-        print(f'HTTP error occurred: {http_err}') 
-    except Exception as err:
-        print(f'Other error occurred: {err}') 
-    #else:
-        #print('Success!')
+    resp = http_request('get', url, payload, True)
         
     if resp.status_code == 200:
         resp = json.loads(resp.content)
         for item in resp['rows']:
-            if item['cell'][4].find(targetstring) > -1 and item['cell'][4].find(email) > -1: 
+            if item['cell'][4].find(np_name) > -1 and item['cell'][4].find(email) > -1: 
                 return True
     
     else:
@@ -318,7 +196,7 @@ def process_account(account_added, extaccountid):
     print('Showtime!')
 
     notification_name = OPTIONS.accountname + '_snapshot_' + ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(5))
-    utc_datetime = (datetime.utcnow() + timedelta(minutes=4))
+    utc_datetime = (datetime.utcnow() + timedelta(minutes=2))
     cronexpression = '0 ' + str(utc_datetime.minute) + ' ' + str(utc_datetime.hour) + ' 1/1 * ? *'
     notification_policy_added = add_notification_policy(notification_name, OPTIONS.email, cronexpression)
 
@@ -337,24 +215,53 @@ def process_account(account_added, extaccountid):
             break
 
     if not notification_found:
-        print("Failed to validate report was sent.")
+        print("Failed to confirm report was sent.")
     
     unassociate_cc_policy(cc_policy_added)
     delete_notification_policy(notification_policy_added)
     remove_cloud_account(account_added) 
 
+def http_request(request_type, url, payload, silent): 
+
+    # request_type = post/delete/get
+    request_type = request_type.lower()
+    # silent = True/False
+
+    headers = {'content-type': 'application/json'}
+    resp = ''
+    try:
+        if request_type.lower() == 'post':
+            resp = requests.post(url, auth=HTTPBasicAuth(d9id, d9secret), json=payload, headers=headers)
+        elif request_type.lower() == 'delete':
+            resp = requests.delete(url, auth=HTTPBasicAuth(d9id, d9secret), json=payload, headers=headers)
+        elif request_type.lower() == 'get':
+            resp = requests.get(url, auth=HTTPBasicAuth(d9id, d9secret), json=payload, headers=headers)
+        else:
+            print('Request type not supported.')
+            return False
+        
+        resp.raise_for_status()
+    except HTTPError as http_err:
+        print(f'HTTP error occurred: {http_err}') 
+    except Exception as err:
+        print(f'Other error occurred: {err}') 
+    else:
+        if not silent:
+            print('Success!')
+    
+    return resp
+
 # Main
 def main(argv=None):
 
-    global OPTIONS, d9id, d9secret, mode, cloudid
+    global d9id, d9secret, OPTIONS, mode, cloudid
     account_added = ''
     notification_added = ''
 
+    # Get Dome9 API credentials from config file
     config = configparser.ConfigParser()
     config.read("./d9_account.conf")
 
-    # set up our Dome9 API endpoint(s) and other Dome9 dependencies
-    global d9id, d9secret
     d9id = config.get('dome9', 'd9id')
     d9secret = config.get('dome9','d9secret')
 
