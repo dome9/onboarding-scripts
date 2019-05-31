@@ -45,7 +45,7 @@ def add_aws_account(name, arn, extid):
         return resp['id']
     
     elif resp.status_code == 400:
-        print('AWS Cloud Account already added or bad request. Please remove from Dome9 before using this script.')
+        print('AWS Cloud Account already added or bad request. Please remove the account from Dome9 before using this script.')
 
     else:
         print('Error when attempting to add AWS account.')
@@ -78,7 +78,7 @@ def add_azure_account(name, subscriptionid, tenantid, appid, appkey):
         return resp['id']
     
     elif resp.status_code == 400:
-        print('Azure Subscription already added or bad request. Please remove from Dome9 before using this script.')
+        print('Azure Subscription already added or bad request. Please remove the subscription from Dome9 before using this script.')
 
     else:
         print('Error when attempting to add Azure subscription.')
@@ -87,7 +87,7 @@ def add_azure_account(name, subscriptionid, tenantid, appid, appkey):
 
 def add_gcp_account(name, key):
     
-    url = "https://api.dome9.com/v2//GoogleCloudAccount"
+    url = "https://api.dome9.com/v2/GoogleCloudAccount"
     urldata = {"name":name,"serviceAccountCredentials":key}
     headers = {'content-type': 'application/json'}
 
@@ -111,7 +111,7 @@ def add_gcp_account(name, key):
         return resp['id']
     
     elif resp.status_code == 400:
-        print('GCP Project already added or bad request. Please remove from Dome9 before using this script.')
+        print('GCP Project already added or bad request. Please remove the project from Dome9 before using this script.')
 
     else:
         print('Error when attempting to add GCP Project.')
@@ -124,7 +124,7 @@ def add_notification_policy(name, email, cronexpression):
     urldata = {"name":name,"description":"","alertsConsole":False,"scheduledReport":{"emailSendingState":"Enabled","scheduleData":{"cronExpression":cronexpression,"type":"Detailed","recipients":[email]}},"changeDetection":{"emailSendingState":"Disabled","emailPerFindingSendingState":"Disabled","snsSendingState":"Disabled","externalTicketCreatingState":"Disabled","awsSecurityHubIntegrationState":"Disabled"},"gcpSecurityCommandCenterIntegration":{"state":"Disabled"}}
     headers = {'content-type': 'application/json'}
 
-    print('\n\nCreating Notification Policy...')
+    print('\nCreating Notification Policy...')
     
     try:
         resp = requests.post(url, auth=HTTPBasicAuth(d9id, d9secret), json=urldata, headers=headers)
@@ -279,34 +279,69 @@ def delete_notification_policy(id):
         print(f'Other error occurred: {err}') 
     else:
         print('Success!')    
+        
+def get_scheduled_report_status(targetstring, email):
+    startdatetime = datetime.utcnow() + timedelta(hours=-2)
+    enddatetime = datetime.utcnow() + timedelta(hours=2)
+
+    url = 'https://api.dome9.com/v2/Audit?&eventType=AssessmentScheduledReportSentEvent&eventsPerPage=100&fim=false&pageNum=1&startTimestamp=' + str(startdatetime.date()) + 'T' + str(startdatetime.time()) + 'Z&endTimestamp=' + str(enddatetime.date()) + 'T' + str(enddatetime.time()) + 'Z'
+    urldata = {}
+    headers = {'content-type': 'application/json'}
+    #print('Querying Audit Trail...')
+
+    try:
+        resp = requests.get(url, auth=HTTPBasicAuth(d9id, d9secret), json=urldata, headers=headers)
+        
+        # If the response was successful, no Exception will be raised
+        resp.raise_for_status()
+    except HTTPError as http_err:
+        print(f'HTTP error occurred: {http_err}') 
+    except Exception as err:
+        print(f'Other error occurred: {err}') 
+    #else:
+        #print('Success!')
+        
+    if resp.status_code == 200:
+        resp = json.loads(resp.content)
+        for item in resp['rows']:
+            if item['cell'][4].find(targetstring) > -1 and item['cell'][4].find(email) > -1: 
+                return True
+    
+    else:
+        return False
 
 def process_account(account_added, extaccountid):
 
-    print('\nWaiting ' + OPTIONS.delay + ' minutes for cloud sync to complete.')
+    print('\nWaiting ' + OPTIONS.delay + ' minutes for cloud sync to complete...')
     syncwait = int(OPTIONS.delay) * 60
-    countdown(syncwait)
+    sleep(syncwait)
+    print('Showtime!')
 
     notification_name = OPTIONS.accountname + '_snapshot_' + ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(5))
-    utc_datetime = (datetime.utcnow() + timedelta(minutes=5))
+    utc_datetime = (datetime.utcnow() + timedelta(minutes=4))
     cronexpression = '0 ' + str(utc_datetime.minute) + ' ' + str(utc_datetime.hour) + ' 1/1 * ? *'
     notification_policy_added = add_notification_policy(notification_name, OPTIONS.email, cronexpression)
 
     cc_policy_added = add_cc_policy(account_added, extaccountid, notification_policy_added, OPTIONS.rulesetid)
     run_assessment(account_added, OPTIONS.rulesetid)
 
-    print('\nEmail report delivery pending. \nWaiting 20 minutes...')
-    countdown(1200)
+    print('\nAssessment email report is scheduled. Waiting for confirmation...')
+    t = 0
+    while t < 30:
+        t += 1
+        sleep(60)
+        print('... Try ' + str(t) + '/30')
+        notification_found = get_scheduled_report_status(notification_name, OPTIONS.email)
+        if notification_found:
+            print("\nSuccess! Scheduled report sent to " + OPTIONS.email)
+            break
+
+    if not notification_found:
+        print("Failed to validate report was sent.")
+    
     unassociate_cc_policy(cc_policy_added)
     delete_notification_policy(notification_policy_added)
     remove_cloud_account(account_added) 
- 
-def countdown(t):
-    while t:
-        mins, secs = divmod(t, 60)
-        timeformat = '{:02d}:{:02d}'.format(mins, secs)
-        print(timeformat, end='\r')
-        sleep(1)
-        t -= 1
 
 # Main
 def main(argv=None):
@@ -349,7 +384,7 @@ def main(argv=None):
         parser.add_argument("--rulesetid", dest="rulesetid", default=-25, help="GCP-specific Dome9 Compliance Ruleset ID. Default: -25 (NIST 800-53)")
     
     parser.add_argument("--email", dest="email", help="E-mail Address *")
-    parser.add_argument("--delay", dest="delay", default="30", help="Time to wait after account onboarded (in minutes). Default: 30")
+    parser.add_argument("--delay", dest="delay", default="10", help="Time to wait after account onboarded (in minutes). Default: 10")
 
     OPTIONS = parser.parse_args(argv)
 

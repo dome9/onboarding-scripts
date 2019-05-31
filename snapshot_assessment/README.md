@@ -1,14 +1,14 @@
 # **Dome9 Snapshot Compliance Assessment Tool** #
 A command line tool to run a Dome9, one-time, snapshot compliance assessment of a cloud account.<br/>
-AWS, Microsoft Azure, and Google Cloud Platform (GCP) are supported. The default total runtime is about 50 minutes and will auto-cleanup upon completion.
+AWS, Microsoft Azure, and Google Cloud Platform (GCP) are supported. The average runtime is about 15 minutes and will auto-cleanup upon completion.
 
-## Tool Process Summary ##
+## Process Summary ##
 The following explains what this tool does in sequence:
-1. Onboards an account into Dome9 using the API
-2. Waits 30 minutes for initial account sync to complete 
+1. Onboards target account into Dome9 using the API
+2. Waits 10 minutes for initial account sync to complete 
 3. Schedules a compliance assessment report to be emailed
-4. Compliance assessment triggered 
-5. Waits 20 minutes for pending report to email
+4. Compliance assessment is triggered 
+5. Waits up to 30 minutes for report to be email (~7 minutes)
 6. Cleanup 
    * Note: Cloud accounts are global in Dome9. If an account is not removed it will not be available for onboarding in any other Dome9 account.
 
@@ -76,7 +76,7 @@ The mode indicates the public cloud provider type of the target account being as
 Common Options
 * ```--name``` : Friendly name of the cloud account (No spaces) (**required**)
 * ```--email``` : E-mail address to send compliance report (**required**)
-* ```--delay``` : Delay (in minutes) to wait for initial cloud account sync to complete. Default is **30**. Very large accounts may require longer.
+* ```--delay``` : Delay (in minutes) to wait for initial cloud account sync to complete. Default is **10**. 
 
 AWS Mode Options
 * ```--arn``` : The role ARN of the AWS Dome9-Connect role (**required**)
