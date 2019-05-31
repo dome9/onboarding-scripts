@@ -30,27 +30,27 @@ The following explains what this tool does in sequence:
    * [ ] API Service Account credential key file in JSON format. e.g. ```mykey.json```
 
 ## Installation ##
-1. Clone this repo into your local machine
+1. Clone this repo into your local environment
 
 ```git clone https://github.com/Dome9/onboarding-scripts.git```
 
-2. Navigate to this tool folder:
+2. Navigate to the snapshot_asssessment directory:
 
 ```cd onboarding-scripts/snapshot_assessment```
 
-3. Edit d9_account.conf file with a Dome9 V2 API id and secret key.
+3. Edit d9_account.conf file with a [Dome9 V2 API id and secret key](https://secure.dome9.com/v2/settings/credentials).
 
 
 ## How to run ##
 1. [Optional] Choose a Dome9 compliance ruleset (Default is NIST 800-53 Rev 4)
    * In Dome9, click **Compliance & Governance**  > **Rulesets**
    * Use the **Platform** filter on the left and choose a cloud provider.
-   * In the right-pane, click on the desired **ruleset** to open.
-   * Look to the browser address bar. The ruleset id is the last number in the URL following the last **forward slash**
+   * In the right-pane, click on a **ruleset** from the list to open.
+   * Look to the browser address bar. The ruleset id is the number in the URL following the last **forward slash**
      *  e.g. ```https://secure.dome9.com/v2/compliance-engine/policy/-2``` 
-     * In this  example, the ruleset id is ```-2```
-2. Using console, navigate to the respective directory (`onboarding-scripts/snapshot_assessment`)
-3. Run the command 
+     * In this example, the ruleset id is ```-2```
+2. In the console, navigate to the respective directory (`onboarding-scripts/snapshot_assessment`)
+3. Run the script using a set mode <aws/azure/gcp> with the respective options. Below is the syntax with examples.
 ```
 # Syntax
 python snapshot_assessment.py [mode] [options] 
@@ -64,7 +64,7 @@ python snapshot_assessment.py aws --name testawsaccount --email user@domain.com 
 # Azure Example
 python snapshot_assessment.py azure --name testazureaccount --email user@domain.com --subscriptionid 7b7d6c48-c533-4a22-a653-374548654321 --tenantid c73f8e89-005d-4cb5-8c90-82bead654321 --appid 3f546116-33c9-4b70-9186-250100654321 --key 1HmMAz[PLyAm/u/9gW+V8xb33c654321
 # GCP Example
-python snapshot_assessment.py azure --name testgcpaccount --email name@domain.com --keyfile ./mykey.json
+python snapshot_assessment.py gcp --name testgcpaccount --email name@domain.com --keyfile ./mykey.json
 ```
 ### Command Line Modes ###
 The mode indicates the public cloud provider type of the target account being assessed:
@@ -76,21 +76,21 @@ The mode indicates the public cloud provider type of the target account being as
 Common Options
 * ```--name``` : Friendly name of the cloud account (No spaces) (**required**)
 * ```--email``` : E-mail address to send compliance report (**required**)
-* ```--delay``` : Delay (in minutes) to wait for initial cloud account sync to complete. Default is **10**. 
+* ```--delay``` : Delay (in minutes) to wait for initial cloud account sync to complete. Default: ```10```. 
 
 AWS Mode Options
 * ```--arn``` : The role ARN of the AWS Dome9-Connect role (**required**)
 * ```--externalid``` : The external ID used when creating the AWS Dome9-Connect role (**required**)
-* ```--rulesetid``` : AWS-specific Dome9 Compliance Ruleset ID. Default: **-16** (NIST 800-53)
+* ```--rulesetid``` : AWS-specific Dome9 Compliance Ruleset ID. Default: ```-16``` (NIST 800-53)
 
 Azure Mode Options
 * ```--subscriptionid``` : Azure Subscription ID (**required**)
 * ```--tenandid``` : Azure AD/Tenant ID (**required**)
 * ```--appid``` : Azure App (Client) ID for Dome9 App Registration (**required**)
 * ```--key``` : Azure App (Client) Secret Key for Dome9 App Registration (**required**)
-* ```--rulesetid``` : Azure-specific Dome9 Compliance Ruleset ID. Default: **-23** (NIST 800-53)
+* ```--rulesetid``` : Azure-specific Dome9 Compliance Ruleset ID. Default: ```-23``` (NIST 800-53)
 
 GCP Mode Options
 * ```--keyfile``` : Path to GCP key file in JSON format of the Dome9 service account (**required**)
-* ```--rulesetid``` : GCP-specific Dome9 Compliance Ruleset ID. Default: **-25** (NIST 800-53)
+* ```--rulesetid``` : GCP-specific Dome9 Compliance Ruleset ID. Default: ```-25``` (NIST 800-53)
 
