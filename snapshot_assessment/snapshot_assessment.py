@@ -258,19 +258,30 @@ def main(argv=None):
     account_added = ''
     notification_added = ''
 
-    # Get Dome9 API credentials from config file
-    config = configparser.ConfigParser()
-    config.read("./d9_account.conf")
+    # Get Dome9 API credentials from env variables or config file
 
-    d9id = config.get('dome9', 'd9id')
-    d9secret = config.get('dome9','d9secret')
+    try:
+        d9id = os.environ['d9id']
+        d9secret = os.environ['d9secret']
+        print('Environment variables found for Dome9 API credentials.')
+    except KeyError: 
+        print('Reading config file for Dome9 API credentials...')
+        config = configparser.ConfigParser()
+        config.read("./d9_account.conf")
+        d9id = config.get('dome9', 'd9id')
+        d9secret = config.get('dome9','d9secret')
+        if d9id and d9secret:
+             print('Success!')
+        else:
+            print('Dome9 API credentials not found in configuration file.')
+            os._exit(1)
 
 # handle arguments
     if argv is None:
         argv = sys.argv[2:]
 
     mode = sys.argv[1].lower()
-    print("Mode: " + mode)
+    print("\nMode: " + mode)
 
     parser = argparse.ArgumentParser("%prog <aws|azure|gcp> [options] ")
     parser.add_argument("--name", dest="accountname", help="Cloud account friendly name")

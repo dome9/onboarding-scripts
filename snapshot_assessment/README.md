@@ -38,8 +38,9 @@ The following explains what this tool does in sequence:
 
 ```cd onboarding-scripts/snapshot_assessment```
 
-3. Edit d9_account.conf file with a [Dome9 V2 API id and secret key](https://secure.dome9.com/v2/settings/credentials).
-
+3. [Get Dome9 V2 API id and secret key](https://secure.dome9.com/v2/settings/credentials).
+   * Option 1: Set local environment variables ```d9id``` and ```d9secret``` with their respective values.
+   * Option 2: Edit d9_account.conf and populate ```d9id``` and ```d9secret``` with their respective values.
 
 ## How to run ##
 1. [Optional] Choose a Dome9 compliance ruleset (Default is NIST 800-53 Rev 4)
