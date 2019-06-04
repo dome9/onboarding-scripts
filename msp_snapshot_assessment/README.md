@@ -12,10 +12,6 @@ The following explains what this tool does in sequence:
 6. Cleanup 
    * Note: Cloud accounts are global in Dome9. If an account is not removed it will not be available for onboarding in any other Dome9 account.
 
-## Assumptions ##
-
-The client cloud account has 
-
 ## Requirements ##
 * Python 3.6 or later. Verify: ```python3 --version```
 * Access to IAM for a AWS, Azure, or GCP (or know who does) to create Dome9 read permissions.
@@ -52,8 +48,7 @@ The client cloud account has
    * Use the **Platform** filter on the left and choose a cloud provider.
    * In the right-pane, click on a **ruleset** from the list to open.
    * Look to the browser address bar. The ruleset id is the number in the URL following the last **forward slash**
-     * e.g. AWS PCI-DSS 3.2 has url: ```https://secure.dome9.com/v2/compliance-engine/policy/-2``` 
-     * In this example, the ruleset id is ```-2```
+     * Example: AWS PCI-DSS 3.2 has url: ```https://secure.dome9.com/v2/compliance-engine/policy/-2``` therefore the ruleset id = ```-2```
 2. In the console, navigate to the respective directory (`onboarding-scripts/snapshot_assessment`)
 3. Run the script using a set mode <aws/azure/gcp> with the respective options. Below is the syntax with examples.
 ```
