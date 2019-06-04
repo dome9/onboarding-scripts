@@ -29,7 +29,6 @@ def add_aws_account(name, arn, extid):
     
     if resp.status_code == 201:
         resp = json.loads(resp.content)
-        print('AWS account added successfully.')
         return resp['id']
     
     elif resp.status_code == 400:
@@ -50,7 +49,6 @@ def add_azure_account(name, subscriptionid, tenantid, appid, appkey):
     
     if resp.status_code == 201:
         resp = json.loads(resp.content)
-        print('Azure Subscription added successfully.')
         return resp['id']
     
     elif resp.status_code == 400:
@@ -71,7 +69,6 @@ def add_gcp_account(name, key):
     
     if resp.status_code == 201:
         resp = json.loads(resp.content)
-        print('GCP Project added successfully.')
         return resp['id']
     
     elif resp.status_code == 400:
@@ -117,7 +114,21 @@ def add_notification_policy(name, email, cronexpression):
         print('Error when attempting to add Notification policy.')
         print(resp)
         return False
-        
+
+def get_compliance_ruleset(rulesetid):
+
+    url = "https://api.dome9.com/v2/CompliancePolicy/" + str(rulesetid)
+    payload = {}
+
+    resp = http_request('get', url, payload, True)
+
+    if resp.status_code == 200:
+        resp = json.loads(resp.content)
+        return resp
+    else:
+        print('Error when attempting to lookup compliance rulset. Verify the ruleset ID.')
+        os._exit(1)
+
 def add_cc_policy(d9cloudaccountid, extaccountid, notificationid, rulesetid):
 
     url = "https://api.dome9.com/v2/Compliance/ContinuousCompliancePolicy/ContinuousCompliancePolicies"
@@ -141,7 +152,7 @@ def run_assessment(d9cloudaccountid, rulesetid):
     url = "https://api.dome9.com/v2/assessment/bundleV2"
     payload = {"Id": rulesetid, "CloudAccountId": d9cloudaccountid, "CloudAccountType": cloudid, "Region":""}
 
-    print(f'\nRunning Compliance Assessment using ruleset id: {rulesetid}')
+    print(f'\nRunning Compliance Assessment...')
     resp = http_request('post', url, payload, False)
 
     if resp.status_code == 200:
@@ -321,7 +332,7 @@ def main(argv=None):
         parser.add_argument("--rulesetid", dest="rulesetid", default=-25, help="GCP-specific Dome9 Compliance Ruleset ID. Default: -25 (NIST 800-53)")
     
     parser.add_argument("--email", dest="email", help="E-mail Address *")
-    parser.add_argument("--delay", dest="delay", default="10", help="Time to wait after account onboarded (in minutes). Default: 10")
+    parser.add_argument("--delay", dest="delay", default="5", help="Time to wait after account onboarded (in minutes). Default: 5")
 
     OPTIONS = parser.parse_args(argv)
 
@@ -338,7 +349,14 @@ def main(argv=None):
         parser.print_help()
         os._exit(1)
 
-    print(f'\nRuleset ID: {OPTIONS.rulesetid}')
+    ruleset = get_compliance_ruleset(OPTIONS.rulesetid)
+    print(f'\nRuleset:\n-ID: {OPTIONS.rulesetid}\n-Name: {ruleset["name"]}\n-Cloud: {ruleset["cloudVendor"]}')
+    if (mode != ruleset['cloudVendor']) or (mode != ruleset['cloudVendor']) or (mode == 'gcp' and ruleset['cloudVendor'] != 'google'):
+        print('\nERROR: Mode/ruleset mismatch.')
+        os._exit(1)
+    else:
+        print('\nRuleset match found.')
+        
     if mode == 'aws':
         if not OPTIONS.arn or not OPTIONS.externalid:
             print('ERROR: Missing required arguments for mode [aws]\n')        
@@ -349,7 +367,7 @@ def main(argv=None):
         arnparse = OPTIONS.arn.split(':')
         extaccountid = arnparse[4]
 
-        print(f'Cloud Account \n-Name: {OPTIONS.accountname} \n-ID: {extaccountid}')
+        print(f'\nCloud Account \n-Name: {OPTIONS.accountname} \n-ID: {extaccountid}')
         account_added = add_aws_account(OPTIONS.accountname, OPTIONS.arn, OPTIONS.externalid)
 
         if account_added:
@@ -363,7 +381,7 @@ def main(argv=None):
 
         cloudid = 7
 
-        print(f'Cloud Account \n-Name: {OPTIONS.accountname}\n-ID: {OPTIONS.subscriptionid}\nTenant ID: {OPTIONS.tenantid}\nApp ID:  {OPTIONS.appid}')
+        print(f'\nCloud Account \n-Name: {OPTIONS.accountname}\n-ID: {OPTIONS.subscriptionid}\nTenant ID: {OPTIONS.tenantid}\nApp ID:  {OPTIONS.appid}')
         account_added = add_azure_account(OPTIONS.accountname, OPTIONS.subscriptionid, OPTIONS.tenantid, OPTIONS.appid, OPTIONS.key)
 
         if account_added:
@@ -384,7 +402,7 @@ def main(argv=None):
         with open(OPTIONS.keyfile) as json_file:
             key = json.load(json_file)
 
-        print(f'Cloud Account \n-Name: {OPTIONS.accountnamekey} \n-ID: {key["project_id"]}')
+        print(f'\nCloud Account \n-Name: {OPTIONS.accountname} \n-ID: {key["project_id"]}')
         account_added = add_gcp_account(OPTIONS.accountname, key)
 
         if account_added:
