@@ -17,7 +17,7 @@ d9id = ''
 d9secret = ''
 cloudid = ''
 mode = ''
-print('\n:: Dome9 Snapshot Compliance Assessment :: \nExecution time: ' + str(datetime.now()) + '\n')
+print(f'\n:: Dome9 Snapshot Compliance Assessment :: \nExecution time: {str(datetime.now())} \n')  # Got an error? You need Python 3.6 or later.
 
 def add_aws_account(name, arn, extid):
 
@@ -81,6 +81,24 @@ def add_gcp_account(name, key):
         print('Error when attempting to add GCP Project.')
         print(resp)
         return False
+
+def cloud_account_sync_now(id):
+
+    print('\nCloud account sync...')
+    
+    if mode == 'aws':
+        url = "https://api.dome9.com/v2/cloudaccounts/" + id + "/SyncNow"
+    elif mode == 'azure':
+        url = "https://api.dome9.com/v2/AzureCloudAccount/" + id + "/SyncNow"
+    elif mode == 'gcp':
+        url = "https://api.dome9.com/v2/GoogleCloudAccount/" + id +  "/SyncNow"
+    else:
+        print(f'Invalid cloud provider mode: {mode}')
+        return False
+
+    payload = {}
+
+    resp = http_request('post', url, payload, False)
         
 def add_notification_policy(name, email, cronexpression):
 
@@ -92,7 +110,7 @@ def add_notification_policy(name, email, cronexpression):
 
     if resp.status_code == 201:
         resp = json.loads(resp.content)
-        print('Dome9 Notification policy added successfully. name: ' + name + '')
+        print(f'Dome9 Notification policy added successfully. name: {name}')
         return resp['id']
     
     else:
@@ -123,12 +141,12 @@ def run_assessment(d9cloudaccountid, rulesetid):
     url = "https://api.dome9.com/v2/assessment/bundleV2"
     payload = {"Id": rulesetid, "CloudAccountId": d9cloudaccountid, "CloudAccountType": cloudid, "Region":""}
 
-    print('\nRunning Compliance Assessment using ruleset id: ' + str(rulesetid))
+    print(f'\nRunning Compliance Assessment using ruleset id: {rulesetid}')
     resp = http_request('post', url, payload, False)
 
     if resp.status_code == 200:
         resp = json.loads(resp.content)
-        print('Compliance Assessment completed successfully. \nView ephemeral report at: \nhttps://secure.dome9.com/v2/compliance-engine/result/' + str(resp['id']))
+        print(f'Compliance Assessment completed successfully. \nView ephemeral report at: \nhttps://secure.dome9.com/v2/compliance-engine/result/{resp["id"]}')
         return True
     
     else:
@@ -147,7 +165,7 @@ def remove_cloud_account(id):
     elif mode == 'gcp':
         url = "https://api.dome9.com/v2/GoogleCloudAccount/" + id
     else:
-        print('Invalid cloud provider mode: ' + mode)
+        print(f'Invalid cloud provider mode: {mode}')
         return False
 
     payload = {}
@@ -190,7 +208,8 @@ def get_scheduled_report_status(np_name, email):
 
 def process_account(account_added, extaccountid):
 
-    print('\nWaiting ' + OPTIONS.delay + ' minutes for cloud sync to complete...')
+    cloud_account_sync_now(account_added)
+    print(f'\nWaiting {OPTIONS.delay} minutes for cloud account sync to complete...')
     syncwait = int(OPTIONS.delay) * 60
     sleep(syncwait)
     print('Showtime!')
@@ -208,10 +227,10 @@ def process_account(account_added, extaccountid):
     while t < 30:
         t += 1
         sleep(60)
-        print('... Try ' + str(t) + '/30')
+        print(f'... Try {t}/30')
         notification_found = get_scheduled_report_status(notification_name, OPTIONS.email)
         if notification_found:
-            print("\nSuccess! Scheduled report sent to " + OPTIONS.email)
+            print(f'\nSuccess! Scheduled report sent to {OPTIONS.email}')
             break
 
     if not notification_found:
@@ -244,7 +263,7 @@ def http_request(request_type, url, payload, silent):
     except HTTPError as http_err:
         print(f'HTTP error occurred: {http_err}') 
     except Exception as err:
-        print(f'Other error occurred: {err}') 
+        print(f'Other error occurred: {err}')  
     else:
         if not silent:
             print('Success!')
@@ -281,7 +300,7 @@ def main(argv=None):
         argv = sys.argv[2:]
 
     mode = sys.argv[1].lower()
-    print("\nMode: " + mode)
+    print(f'\nMode: {mode}')
 
     parser = argparse.ArgumentParser("%prog <aws|azure|gcp> [options] ")
     parser.add_argument("--name", dest="accountname", help="Cloud account friendly name")
@@ -315,13 +334,14 @@ def main(argv=None):
         os._exit(1)
 
     if not OPTIONS.email or not OPTIONS.accountname or not OPTIONS.rulesetid:
-        print("ERROR: Missing required arguments \n")        
+        print('ERROR: Missing required arguments \n')        
         parser.print_help()
         os._exit(1)
 
+    print(f'\nRuleset ID: {OPTIONS.rulesetid}')
     if mode == 'aws':
         if not OPTIONS.arn or not OPTIONS.externalid:
-            print("ERROR: Missing required arguments for mode 'aws'\n")        
+            print('ERROR: Missing required arguments for mode [aws]\n')        
             parser.print_help()
             os._exit(1)
 
@@ -329,7 +349,7 @@ def main(argv=None):
         arnparse = OPTIONS.arn.split(':')
         extaccountid = arnparse[4]
 
-        print('Cloud Account \n-ID: ' + extaccountid + '\n-Name: ' + OPTIONS.accountname)
+        print(f'Cloud Account \n-Name: {OPTIONS.accountname} \n-ID: {extaccountid}')
         account_added = add_aws_account(OPTIONS.accountname, OPTIONS.arn, OPTIONS.externalid)
 
         if account_added:
@@ -337,13 +357,13 @@ def main(argv=None):
 
     elif mode == 'azure':
         if not OPTIONS.subscriptionid or not OPTIONS.tenantid or not OPTIONS.appid or not OPTIONS.key:
-            print("ERROR: Missing required arguments for mode 'azure'\n")        
+            print('ERROR: Missing required arguments for mode [azure]\n')        
             parser.print_help()
             os._exit(1)
 
         cloudid = 7
 
-        print('Cloud Account \n-ID: ' + OPTIONS.subscriptionid + '\n-Name: ' + OPTIONS.accountname)
+        print(f'Cloud Account \n-Name: {OPTIONS.accountname}\n-ID: {OPTIONS.subscriptionid}\nTenant ID: {OPTIONS.tenantid}\nApp ID:  {OPTIONS.appid}')
         account_added = add_azure_account(OPTIONS.accountname, OPTIONS.subscriptionid, OPTIONS.tenantid, OPTIONS.appid, OPTIONS.key)
 
         if account_added:
@@ -351,20 +371,20 @@ def main(argv=None):
 
     elif mode == 'gcp':
         if not OPTIONS.keyfile:
-            print("ERROR: Missing required arguments for mode 'gcp'\n")        
+            print('ERROR: Missing required arguments for mode [gcp]\n')        
             parser.print_help()
             os._exit(1)
 
         keyfileexists = os.path.isfile(OPTIONS.keyfile)
         if not keyfileexists:
-            print("GCP key file not found on disk: " + OPTIONS.keyfile)
+            print(f'GCP key file not found on disk: {OPTIONS.keyfile}')
             os._exit(1)
 
         cloudid = 10
         with open(OPTIONS.keyfile) as json_file:
             key = json.load(json_file)
 
-        print('Cloud Account \n-ID: ' + key['project_id'] + '\n-Name: ' + OPTIONS.accountname)
+        print(f'Cloud Account \n-Name: {OPTIONS.accountnamekey} \n-ID: {key["project_id"]}')
         account_added = add_gcp_account(OPTIONS.accountname, key)
 
         if account_added:

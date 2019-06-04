@@ -8,12 +8,12 @@ The following explains what this tool does in sequence:
 2. Waits 10 minutes for initial account sync to complete 
 3. Schedules a compliance assessment report to be emailed
 4. Compliance assessment is triggered
-5. Waits for confirmation the compliance assessment email sent (~7 minutes)
+5. Waits for confirmation that the compliance assessment email was sent (~7 minutes)
 6. Cleanup 
    * Note: Cloud accounts are global in Dome9. If an account is not removed it will not be available for onboarding in any other Dome9 account.
 
 ## Requirements ##
-* Python 3.6 or later
+* Python 3.6 or later. Verify: ```python3 --version```
 * Access to IAM for a AWS, Azure, or GCP (or know who does) to create Dome9 read permissions.
 * AWS account with Dome9-Connect cross-account access role deployed.
    * [ ] Create permissions for Dome9. [Manual](https://helpcenter.dome9.com/hc/en-us/articles/360003994613-Onboard-an-AWS-Account) | [CFT](https://github.com/Dome9/onboarding-scripts/tree/master/AWS/cloudformation) | [Script](https://github.com/Dome9/onboarding-scripts/tree/master/AWS/cft_with_d9_api_automation)
@@ -54,18 +54,18 @@ The following explains what this tool does in sequence:
 3. Run the script using a set mode <aws/azure/gcp> with the respective options. Below is the syntax with examples.
 ```
 # Syntax
-python snapshot_assessment.py [mode] [options] 
+python3 snapshot_assessment.py [mode] [options] 
 # Help with modes
-python snapshot_assessment.py aws --help 
-python snapshot_assessment.py azure --help 
-python snapshot_assessment.py gcp --help 
+python3 snapshot_assessment.py aws --help 
+python3 snapshot_assessment.py azure --help 
+python3 snapshot_assessment.py gcp --help 
 #
 # AWS Example
-python snapshot_assessment.py aws --name testawsaccount --email user@domain.com --arn arn:aws:iam::012345678912:role/Dome9-Connect --externalid bkbj00xuTAM102IceF054321
+python3 snapshot_assessment.py aws --name testawsaccount --email user@domain.com --arn arn:aws:iam::012345678912:role/Dome9-Connect --externalid bkbj00xuTAM102IceF054321
 # Azure Example
-python snapshot_assessment.py azure --name testazureaccount --email user@domain.com --subscriptionid 7b7d6c48-c533-4a22-a653-374548654321 --tenantid c73f8e89-005d-4cb5-8c90-82bead654321 --appid 3f546116-33c9-4b70-9186-250100654321 --key 1HmMAz[PLyAm/u/9gW+V8xb33c654321
+python3 snapshot_assessment.py azure --name testazureaccount --email user@domain.com --subscriptionid 7b7d6c48-c533-4a22-a653-374548654321 --tenantid c73f8e89-005d-4cb5-8c90-82bead654321 --appid 3f546116-33c9-4b70-9186-250100654321 --key 1HmMAz[PLyAm/u/9gW+V8xb33c654321
 # GCP Example
-python snapshot_assessment.py gcp --name testgcpaccount --email name@domain.com --keyfile ./mykey.json
+python3 snapshot_assessment.py gcp --name testgcpaccount --email name@domain.com --keyfile ./mykey.json
 ```
 ### Command Line Modes ###
 The mode indicates the public cloud provider type of the target account being assessed:
