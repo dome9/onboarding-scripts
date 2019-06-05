@@ -17,7 +17,7 @@ d9id = ''
 d9secret = ''
 cloudid = ''
 mode = ''
-print(f'\n:: Dome9 Snapshot Compliance Assessment :: \nExecution time: {str(datetime.now())} \n')  # Got an error? You need Python 3.6 or later.
+print(f'\n:: MSP Dome9 Snapshot Compliance Assessment :: \nExecution time: {str(datetime.now())} \n')  # Got an error? You need Python 3.6 or later.
 
 def add_aws_account(name, arn, extid):
 
@@ -139,7 +139,6 @@ def add_cc_policy(d9cloudaccountid, extaccountid, notificationid, rulesetid):
 
     if resp.status_code == 201:
         resp = json.loads(resp.content)
-        print('Dome9 Continuous Compliance policy added successfully.')
         return resp[0]['id']
 
     else:
@@ -157,7 +156,7 @@ def run_assessment(d9cloudaccountid, rulesetid):
 
     if resp.status_code == 200:
         resp = json.loads(resp.content)
-        print(f'Compliance Assessment completed successfully. \nView ephemeral report at: \nhttps://secure.dome9.com/v2/compliance-engine/result/{resp["id"]}')
+        print(f'\nView ephemeral report at: \nhttps://secure.dome9.com/v2/compliance-engine/result/{resp["id"]}')
         return True
     
     else:
@@ -211,7 +210,8 @@ def get_scheduled_report_status(np_name, email):
     if resp.status_code == 200:
         resp = json.loads(resp.content)
         for item in resp['rows']:
-            if item['cell'][4].find(np_name) > -1 and item['cell'][4].find(email) > -1: 
+            message = item['cell'][4]
+            if np_name in message and email in message:
                 return True
     
     else:
@@ -351,11 +351,9 @@ def main(argv=None):
 
     ruleset = get_compliance_ruleset(OPTIONS.rulesetid)
     print(f'\nRuleset:\n-ID: {OPTIONS.rulesetid}\n-Name: {ruleset["name"]}\n-Cloud: {ruleset["cloudVendor"]}')
-    if (mode != ruleset['cloudVendor']) or (mode != ruleset['cloudVendor']) or (mode == 'gcp' and ruleset['cloudVendor'] != 'google'):
+    if (mode == 'aws' and ruleset['cloudVendor'] != 'aws') or (mode == 'azure' and ruleset['cloudVendor'] != 'azure') or (mode == 'gcp' and ruleset['cloudVendor'] != 'google'):
         print('\nERROR: Mode/ruleset mismatch.')
         os._exit(1)
-    else:
-        print('\nRuleset match found.')
         
     if mode == 'aws':
         if not OPTIONS.arn or not OPTIONS.externalid:
