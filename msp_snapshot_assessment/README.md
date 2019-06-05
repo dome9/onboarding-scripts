@@ -34,9 +34,9 @@ The following explains what this tool does in sequence:
 
 ```git clone https://github.com/Dome9/onboarding-scripts.git```
 
-2. Navigate to the snapshot_asssessment directory:
+2. Navigate to the msp_snapshot_asssessment directory:
 
-```cd onboarding-scripts/snapshot_assessment```
+```cd onboarding-scripts/msp_snapshot_assessment```
 
 3. [Get Dome9 V2 API id and secret key](https://secure.dome9.com/v2/settings/credentials)
    * Option 1: Set local environment variables ```d9id``` and ```d9secret``` with their respective values.
