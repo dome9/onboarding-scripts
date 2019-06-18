@@ -7,7 +7,7 @@
 # Author: Patrick Pushor
 # todo : lambda-ize and package this via ?, add more error handling and logging
 #
-# Copywrite 2018, Dome9 Security
+# Copywrite 2019, Dome9 Security
 # www.dome9.com - secure your cloud
 # *******************************************************************************
 
@@ -66,18 +66,130 @@ def get_aws_accounts_from_d9():
         print(resp)
         return False
 
-def get_cft_stack(client, name):
+def process_organizatonal_units(aws_ou_list):
+
+    url = "https://api.dome9.com/v2/organizationalunit"
+    payload = {}
+ 
+    resp = http_request('get', url, payload, True)
+
+    if resp.status_code == 200:
+        root = json.loads(resp.content)
+    
+    else:
+        print('Error when attempting to get OUs from Dome9.')
+        print(resp)
+        return False   
+    
+    current_d9_parent_ou = root[0]['children']
+
+    for depth, item in enumerate(aws_ou_list):
+        missing_ou = True
+        for idx, ou in enumerate(current_d9_parent_ou):
+            if ou['item']['name'] == aws_ou_list[depth]:
+                print(f'Found OU in Dome9: {aws_ou_list[depth]}')
+                missing_ou = False
+                last_ou = ou['item']['id']
+                break
+
+        if missing_ou: 
+            oupath = 'ROOT/' + '/'.join(aws_ou_list)
+            print(f'A Dome9 OU was not found. \nCreating all OUs within path: {oupath}')
+            missing_ou_depth = depth
+            while missing_ou_depth < len(aws_ou_list):
+                if missing_ou_depth == 0:
+                    last_ou = create_ou_in_d9(aws_ou_list[missing_ou_depth], None)
+                else:
+                    last_ou = create_ou_in_d9(aws_ou_list[missing_ou_depth], last_ou)
+                missing_ou_depth += 1
+            break
+        else:            
+            current_d9_parent_ou = current_d9_parent_ou[idx]['children']
+    
+    return last_ou
+
+def create_ou_in_d9(name, parent_id):
+
+    url = "https://api.dome9.com/v2/organizationalunit"
+    payload = {"name":name,"parentId":parent_id}
+
+    print(f'\nCreating OU in Dome9: {name}')
+    resp = http_request('post', url, payload, False)
+    
+    if resp.status_code == 200:
+        resp = json.loads(resp.content)
+        return resp['item']['id']
+    
+    else:
+        print('Error when attempting to create OU in Dome9.')
+        print(resp)
+        return False
+
+def attach_account_to_ou_in_d9(cloud_account_id, ou_id):        
+
+    url = "https://api.dome9.com/v2/cloudaccounts/organizationalunit/attach"
+    payload = {"entries":[cloud_account_id],"organizationalUnitId":ou_id}
+
+    print('\Attaching Cloud Account to OU...')
+    resp = http_request('post', url, payload, False)
+    
+    if resp.status_code == 200:
+        resp = json.loads(resp.content)
+        return resp
+    
+    else:
+        print('Error when attempting to attach AWS account to Dome9 OU.')
+        print(resp)
+        return False    
+        
+def get_aws_org_parent(orgclient, id):
     try: 
-        resp = client.describe_stacks(
+        parentresp = orgclient.list_parents(
+            ChildId=id,
+            MaxResults=10
+        )['Parents'] 
+
+        if parentresp[0]['Type'] == 'ORGANIZATIONAL_UNIT':
+            ouresp = orgclient.describe_organizational_unit(
+                OrganizationalUnitId=parentresp[0]['Id']
+            )['OrganizationalUnit']
+            return ouresp
+        elif parentresp[0]['Type'] == 'ROOT':
+            return False
+    except ClientError as e:
+        print(f'Unexpected error: {e}')
+        
+def get_aws_org_ou_flat_list(orgclient, aws_account):
+    ou_list = []
+    current_parent = get_aws_org_parent(orgclient, aws_account)
+    if current_parent:
+        ou_list.append(current_parent['Name'])
+    else:
+        return ou_list
+        
+    while current_parent:
+        current_parent = get_aws_org_parent(orgclient, current_parent['Id'])
+        if current_parent:
+            ou_list.insert(0, current_parent['Name'])
+
+    if len(ou_list) > 5:
+        print(f'ERROR: OUs have exceeded the depth limit of 5: \n{ou_list}')
+        os._exit(1)
+    else: 
+        return ou_list
+
+def get_cft_stack(cfclient, name):
+    try: 
+        resp = cfclient.describe_stacks(
         StackName=name,
         )['Stacks'] 
         return resp[0]
     except ClientError as e:
         print(f'Unexpected error: {e}')
             
-def check_cft_stack_exists(client, name):
+def check_cft_stack_exists(cfclient, name):
     try:
-        stacks = client.list_stacks()['StackSummaries']
+        stacks = cfclient.list_stacks()['StackSummaries']
         for stack in stacks:
             if stack['StackStatus'] == 'DELETE_COMPLETE':
                 continue
@@ -87,9 +199,9 @@ def check_cft_stack_exists(client, name):
         print(f'Unexpected error: {e}')
         return False
         
-def create_cft_stack(client, name, cfturl, extid):
+def create_cft_stack(cfclient, name, cfturl, extid):
     try:
-        resp = client.create_stack(
+        resp = cfclient.create_stack(
             StackName=name,
             TemplateURL=cfturl,
             Parameters=[
@@ -139,30 +251,34 @@ def sync_aws_org(orgclient, stsclient):
     #print(f'D9:\n{d9_aws_accounts_pruned}')
 
     temp_d9_list = {(d['id']) for d in d9_aws_accounts_pruned}
-    unprotectedAccount = [d for d in org_accounts_pruned if (d['id']) not in temp_d9_list]
+    unprotected_account_list = [d for d in org_accounts_pruned if (d['id']) not in temp_d9_list]
 
-    if len(unprotectedAccount) == 0:
+    if len(unprotected_account_list) == 0:
         print("No unprotected accounts found.")
         os._exit(1)
-    print(f'Found the following unprotected AWS Accounts: \n{unprotectedAccount}')
+    print(f'Found the following unprotected AWS Accounts: \n{unprotected_account_list}')
 
-    for account in unprotectedAccount:
-        roleSuffix = 'MattsOrgRole'
+    for account in unprotected_account_list:
+        roleSuffix = 'MattsOrgRole' #hardcoded, needs to change
         assumeRoleArn = 'arn:aws:iam::' + account['id'] + ':role/' + roleSuffix
         print(assumeRoleArn) 
-        stsResponse = stsclient.assume_role(
+        stsresp = stsclient.assume_role(
          RoleArn=assumeRoleArn,
          RoleSessionName='DeployDome9CFTSession',
          DurationSeconds=1800
          )
 
         cfclient = boto3.client('cloudformation',
-         aws_access_key_id=stsResponse['Credentials']['AccessKeyId'],
-         aws_secret_access_key=stsResponse['Credentials']['SecretAccessKey'],
-         aws_session_token=stsResponse['Credentials']['SessionToken'],
+         aws_access_key_id=stsresp['Credentials']['AccessKeyId'],
+         aws_secret_access_key=stsresp['Credentials']['SecretAccessKey'],
+         aws_session_token=stsresp['Credentials']['SessionToken'],
          region_name=region_name
          )
-        process_account(cfclient, account['name'])
+        aws_ou_list = get_aws_org_ou_flat_list(orgclient, account['id'])
+        if aws_ou_list:
+            d9_ou_id = process_organizatonal_units(aws_ou_list)
+            d9_cloud_account_id = process_account(cfclient, account['name'])
+            attach_account_to_ou_in_d9(d9_cloud_account_id, d9_ou_id)
 
 def process_account(cfclient, aws_account_name):
     # Check if the CFT Stack exists from a previous run
@@ -201,6 +317,7 @@ def process_account(cfclient, aws_account_name):
     print('\nAdding AWS account to Dome9...')
     d9_account_added = add_aws_account_to_d9(aws_account_name, rolearn, extid, d9readonly)
     print(d9_account_added)
+    return d9_account_added
     
 def http_request(request_type, url, payload, silent): 
 
@@ -260,7 +377,7 @@ def main():
         if d9id and d9secret:
              print('Success!')
         else:
-            print('Dome9 API credentials not found in configuration file.')
+            print('Dome9 API credentials not found in environment variables or configuration file.')
             os._exit(1)
 
     if not d9id or not d9secret or not d9mode:
