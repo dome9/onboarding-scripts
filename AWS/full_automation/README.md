@@ -17,14 +17,15 @@ The following explains what this tool does in sequence:
 
 ## Requirements ##
 * Python 3.6 or later. Verify: ```python3 --version```
-* IAM User or cross-account access role or with administrative the following minimum permissions:
+* Permissions to create IAM policies in targets AWS accounts.
 
+###IAM Policy for Parent###
+This IAM policy is attached to a IAM user or role in the parent AWS account.
 ```json
-{
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Sid": "D9FULLAUTOMATION",
+            "Sid": "D9FULLAUTOMATIONPARENT",
             "Effect": "Allow",
             "Action": [
                 "iam:ListPolicies",
@@ -37,8 +38,36 @@ The following explains what this tool does in sequence:
                 "cloudformation:List*",
                 "cloudformation:Create*",
                 "cloudformation:Describe*",
+                "sts:*",
                 "organizations:Describe*",
                 "organizations:List*"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
+
+### IAM Policy for Subaccounts ###
+This IAM policy is attached to a cross-account access role in AWS subaccounts.
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "D9FULLAUTOMATIONSUBACCOUNT",
+            "Effect": "Allow",
+            "Action": [
+                "iam:ListPolicies",
+                "iam:GetRole*",
+                "iam:ListRole*",
+                "iam:PutRolePolicy",
+                "iam:CreateRole",
+                "iam:AttachRolePolicy",
+                "iam:CreatePolicy",
+                "cloudformation:List*",
+                "cloudformation:Create*",
+                "cloudformation:Describe*"
             ],
             "Resource": "*"
         }
@@ -54,14 +83,14 @@ Optional: Use the hosted CFTs in the config file.
 ```bash
 # Environment Variable Examples
 # Dome9 V2 API Credentials
-export d9id=dta1234d-45db-4b0f-a323-e1234e89te5t
-export d9secret=tfd3gt5ghq54a754szaqgnsx
+export d9id=12345678-1234-1234-1234-123456789012
+export d9secret=abcdefghijklmnopqrstuvwx
 ```
 - Set AWS environment variables for IAM User ()
 ```bash
 # AWS Credentials
-export AWS_ACCESS_KEY_ID=AKIAX775UPGPTJTQTEST
-export AWS_SECRET_ACCESS_KEY=B1s03HTxIbDciw7EvzZg55hKG1d0kOjZY09xtesT
+export AWS_ACCESS_KEY_ID=AK00012300012300TEST
+export AWS_SECRET_ACCESS_KEY=Nnnnn12345nnNnn67890nnNnn12345nnNnn67890
 ```
 
 - Create IAM user access keys or use a IAM role for your server.
@@ -90,7 +119,7 @@ pip3 install boto3 requests
 ### How to run:
 ```bash
 # Syntax
-python3 d9_aws_acct_add.py <mode> [aws_account_name]
+python3 d9_onboard_aws.py <local|crossaccount|organizations> [options]
 #Help with modes
 d9_onboard_aws.py local --help
 d9_onboard_aws.py crossaccount --help
@@ -98,18 +127,29 @@ d9_onboard_aws.py organizations --help
 #Examples
 d9_onboard_aws.py local --name "AWS DEV" --d9mode readonly --region us-east-1
 d9_onboard_aws.py crossaccount --account 987654321012 --name "AWS DEV" --role MyRoleName --d9mode readonly --region us-east-1
-d9_onboard_aws.py organizations --role MyRoleName --d9mode readonly --region us-east-1 --ignore-failures True
+d9_onboard_aws.py organizations --role MyRoleName --d9mode readonly --region us-east-1 --ignore-failures
 ```
 
-You will notice that we supplied a single command line argument to the script.
-This argument is what the AWS account to be added will be called in Dome9.  You
-can rename an account after the fact if you desire.
+### Command Line Modes ###
+The mode indicates the method to onboard AWS accounts:
+* ```local``` : Onboard local account running the script only
+* ```crossaccount``` : Onboard subaccounts from a parent account using Assume-Role
+* ```organizations``` : Onboard parent and subaccounts into Dome9 organizational units which are discovered and mapped from AWS Organizations metadata
 
-If successful, the script will output the result of the API call to Dome9 to
-add the account.  This is generally a fair bit of output.  This is good.  Any
-errors in the process will be displayed instead of this payload of information -
-if this AWS account in question is already known to Dome9, for example.
+### Command Line Arguments ###
+Common Arguments
+* ```--region``` : AWS Region Name for Dome9 CFT deployment. Default: us-east-1 
+* ```--d9mode``` : readonly/readwrite: Dome9 mode to onboard AWS account as. Default: readonly
 
-This script is very basic and could benefit from logging and error handling,
-but works well and should serve to get you familiar with how this can be
-accomplished.
+"local" Mode Arguments
+* ```--name``` : TCloud account friendly name in quotes, e.g. "AWS PROD" (**required**)
+
+"crossaccount" Mode Arguments
+* ```--account``` : Cloud account number, e.g. 987654321012 (**required**)
+* ```--name``` : Cloud account friendly name in quotes, e.g. "AWS PROD"(**required**)
+* ```--role``` : AWS cross-account access role for Assume-Role, e.g. MyRoleName (**required**)
+
+"organizations" Mode Arguments
+* ```--role``` : AWS cross-account access role for Assume-Role, e.g. MyRoleName (**required**)
+* ```--ignore-ou``` : GCP-specific Dome9 Compliance Ruleset ID. Default: 
+* ```--ignore-failures``` : Ignore onboarding failures and continue. Default: False

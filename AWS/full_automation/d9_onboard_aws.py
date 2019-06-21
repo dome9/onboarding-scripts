@@ -414,7 +414,7 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv[2:]
 
-    example_text = f'\nHelp with modes:\n {sys.argv[0]} local --help\n {sys.argv[0]} crossaccount --help\n {sys.argv[0]} organizations --help\nExamples:\n {sys.argv[0]} local --name "AWS DEV" --d9mode readonly --region us-east-1\n {sys.argv[0]} crossaccount --account 987654321012 --name "AWS DEV" --role MyRoleName --d9mode readonly --region us-east-1\n {sys.argv[0]} organizations --role MyRoleName --d9mode readonly --region us-east-1 --ignore-failures True'
+    example_text = f'\nHelp with modes:\n {sys.argv[0]} local --help\n {sys.argv[0]} crossaccount --help\n {sys.argv[0]} organizations --help\nExamples:\n {sys.argv[0]} local --name "AWS DEV" --d9mode readonly --region us-east-1\n {sys.argv[0]} crossaccount --account 987654321012 --name "AWS DEV" --role MyRoleName --d9mode readonly --region us-east-1\n {sys.argv[0]} organizations --role MyRoleName --d9mode readonly --region us-east-1 --ignore-failures'
 
     parser = argparse.ArgumentParser(
      f'{sys.argv[0]} <local|crossaccount|organizations> [options]',
