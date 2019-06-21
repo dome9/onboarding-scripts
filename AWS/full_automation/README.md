@@ -1,4 +1,4 @@
-# **Dome9 Account Onboarding Automation for AWS** #
+# **Dome9 Full Automation of AWS Account Onboarding** #
 
 This is the fully automated option that will create the cross-account role on the target account, and then link the account to Dome9 via API. 
 
@@ -17,14 +17,52 @@ The following explains what this tool does in sequence:
 
 ## Requirements ##
 * Python 3.6 or later. Verify: ```python3 --version```
-* IAM User or IAM Role with administrative rights to IAM.
+* IAM User or cross-account access role or with administrative the following minimum permissions:
 
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "D9FULLAUTOMATION",
+            "Effect": "Allow",
+            "Action": [
+                "iam:ListPolicies",
+                "iam:GetRole*",
+                "iam:ListRole*",
+                "iam:PutRolePolicy",
+                "iam:CreateRole",
+                "iam:AttachRolePolicy",
+                "iam:CreatePolicy",
+                "cloudformation:List*",
+                "cloudformation:Create*",
+                "cloudformation:Describe*",
+                "organizations:Describe*",
+                "organizations:List*"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
 ## Setup
 
 - Upload CloudFormation templates to an S3 bucket. They can be found at: https://github.com/Dome9/onboarding-scripts/tree/master/AWS/cloudformation
 Optional: Use the hosted CFTs in the config file. 
 
-- Edit the  d9_aws_acct_add.conf file 
+- Set Dome9 environment variables
+```bash
+# Environment Variable Examples
+# Dome9 V2 API Credentials
+export d9id=dta1234d-45db-4b0f-a323-e1234e89te5t
+export d9secret=tfd3gt5ghq54a754szaqgnsx
+```
+- Set AWS environment variables for IAM User ()
+```bash
+# AWS Credentials
+export AWS_ACCESS_KEY_ID=AKIAX775UPGPTJTQTEST
+export AWS_SECRET_ACCESS_KEY=B1s03HTxIbDciw7EvzZg55hKG1d0kOjZY09xtesT
+```
 
 - Create IAM user access keys or use a IAM role for your server.
 API.  These credentials must have rights to create IAM roles and policies, as
@@ -47,15 +85,20 @@ pip3 install boto3 requests
 ```
 
 
-
 ## Operation
 
 ### How to run:
 ```bash
 # Syntax
-python3 d9_aws_acct_add.py [aws_account_name]
-# Example
-python3 d9_aws_acct_add.py "AWS Prod 123"
+python3 d9_aws_acct_add.py <mode> [aws_account_name]
+#Help with modes
+d9_onboard_aws.py local --help
+d9_onboard_aws.py crossaccount --help
+d9_onboard_aws.py organizations --help
+#Examples
+d9_onboard_aws.py local --name "AWS DEV" --d9mode readonly --region us-east-1
+d9_onboard_aws.py crossaccount --account 987654321012 --name "AWS DEV" --role MyRoleName --d9mode readonly --region us-east-1
+d9_onboard_aws.py organizations --role MyRoleName --d9mode readonly --region us-east-1 --ignore-failures True
 ```
 
 You will notice that we supplied a single command line argument to the script.

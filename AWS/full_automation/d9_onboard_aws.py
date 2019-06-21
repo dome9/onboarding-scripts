@@ -225,7 +225,25 @@ def process_organizatonal_units(aws_ou_list):
     
     return last_ou
 
-def sync_aws_organizations(orgclient, stsclient, cfclient, sts_role_suffix, caller_account_number):
+def onboard_crossaccount_account(stsclient):
+    assume_role_arn = 'arn:aws:iam::' + OPTIONS.account_number + ':role/' + OPTIONS.role_name # Build role ARN of target account being onboarded to assume into
+    print(f'\nAssuming Role into target account using ARN: {assume_role_arn}') 
+
+    stsresp = stsclient.assume_role(
+     RoleArn=assume_role_arn,
+     RoleSessionName='DeployDome9CFTSession',
+     DurationSeconds=1800
+     )
+    cfclient = boto3.client('cloudformation',
+     aws_access_key_id=stsresp['Credentials']['AccessKeyId'],
+     aws_secret_access_key=stsresp['Credentials']['SecretAccessKey'],
+     aws_session_token=stsresp['Credentials']['SessionToken'],
+     region_name=OPTIONS.region_name
+     )
+
+    process_account(cfclient, OPTIONS.account_name)
+
+def sync_aws_organizations(orgclient, stsclient, cfclient):
 
     # function to print stats upon completion
     def _print_stats(discovered, successes, failures):
@@ -272,6 +290,8 @@ def sync_aws_organizations(orgclient, stsclient, cfclient, sts_role_suffix, call
         for account in unprotected_account_list:
             print(f'  {account["id"]} | {account["name"]}')
 
+    caller_account_number = boto3.client('sts', region_name=OPTIONS.region_name).get_caller_identity()['Account'] # Identify caller AWS account which needs to be processed without STS assume 
+
     for account in unprotected_account_list:
         print(f'\n*** Initiating onboarding for: {account["id"]} | {account["name"]}')
         aws_ou_list = get_aws_org_ou_list(orgclient, account['id'])    
@@ -281,7 +301,7 @@ def sync_aws_organizations(orgclient, stsclient, cfclient, sts_role_suffix, call
             if d9_cloud_account_id:
                 ou_attached = attach_account_to_ou_in_d9(d9_cloud_account_id, d9_ou_id)
         elif aws_ou_list: #OUs exist and AWS account number is not the callers
-            assume_role_arn = 'arn:aws:iam::' + account['id'] + ':role/' + sts_role_suffix # Build role ARN of target account being onboarded to assume into
+            assume_role_arn = 'arn:aws:iam::' + account['id'] + ':role/' + OPTIONS.role_name # Build role ARN of target account being onboarded to assume into
             print(f'\nAssuming Role into target account using ARN: {assume_role_arn}') 
 
             stsresp = stsclient.assume_role(
@@ -303,12 +323,12 @@ def sync_aws_organizations(orgclient, stsclient, cfclient, sts_role_suffix, call
         elif not aws_ou_list: # Account is in AWS Orgs root
             d9_cloud_account_id = process_account(cfclient, account['name'])
 
-        if not OPTIONS.ignore_failures and (not d9_ou_id or not d9_cloud_account_id or not ou_attached):
+        if (not d9_cloud_account_id or not d9_ou_id or not ou_attached) and not OPTIONS.ignore_failures:
             count_failures += 1 
             print(f'\nError when attempting to onboard AWS account to Dome9. Exiting...')
             _print_stats(len(unprotected_account_list), count_successes, count_failures)
             os._exit(1)
-        elif OPTIONS.ignore_failures and (not d9_ou_id or not d9_cloud_account_id or not ou_attached):
+        elif (d9_cloud_account_id == False or not d9_ou_id or not ou_attached) and OPTIONS.ignore_failures:
             print('\nError when attempting to onboard AWS account to Dome9. Continuing...')
             count_failures += 1
         elif d9_ou_id and d9_cloud_account_id and ou_attached:
@@ -394,10 +414,10 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv[2:]
 
-    example_text = f'\nHelp with modes:\n {sys.argv[0]} single --help\n {sys.argv[0]} organizations --help\nExamples:\n {sys.argv[0]} single --name "MyAWS PROD" --d9mode readonly --region us-east-1\n {sys.argv[0]} organizations --rolename MyRoleName --d9mode readonly --region us-east-1 --ignore-failures True'
+    example_text = f'\nHelp with modes:\n {sys.argv[0]} local --help\n {sys.argv[0]} crossaccount --help\n {sys.argv[0]} organizations --help\nExamples:\n {sys.argv[0]} local --name "AWS DEV" --d9mode readonly --region us-east-1\n {sys.argv[0]} crossaccount --account 987654321012 --name "AWS DEV" --role MyRoleName --d9mode readonly --region us-east-1\n {sys.argv[0]} organizations --role MyRoleName --d9mode readonly --region us-east-1 --ignore-failures True'
 
     parser = argparse.ArgumentParser(
-     f'{sys.argv[0]} <single|organizations> [options]',
+     f'{sys.argv[0]} <local|crossaccount|organizations> [options]',
      epilog=example_text,
      formatter_class=RawTextHelpFormatter)
     parser._action_groups.pop()
@@ -418,12 +438,16 @@ def main(argv=None):
         parser.print_help()        
         os._exit(1)
 
-    if mode == 'single':
+    if mode == 'local':
         required .add_argument('--name', dest='account_name', help='Cloud account friendly name in quotes (e.g. "AWS PROD")', required=True)
+    elif mode == 'crossaccount':
+        required .add_argument('--account', dest='account_number', help='Cloud account number (e.g. 987654321012)', required=True)
+        required .add_argument('--name', dest='account_name', help='Cloud account friendly name in quotes (e.g. "AWS PROD")', required=True)
+        required.add_argument('--role', dest='role_name', help='AWS cross-account access role for Assume-Role. (e.g. MyRoleName)', required=True)
     elif mode == 'organizations':
-        required.add_argument('--rolename', dest='role_name', help='Name of priviledged AWS role in child accounts for Assume-Role action. (e.g. MyRoleName)', required=True)
-        optional.add_argument('--ignore-ou', dest='ignore_ou', default=False, help='True/False: Ignore AWS Organizations OUs and place accounts in root. Default: False')
-        optional.add_argument('--ignore-failures', dest='ignore_failures', default=False, help='True/False: Ignore onboarding failures and continue. Default: False')
+        required.add_argument('--role', dest='role_name', help='AWS cross-account access role for Assume-Role. (e.g. MyRoleName)', required=True)
+        optional.add_argument('--ignore-ou', dest='ignore_ou', default=False, help='Ignore AWS Organizations OUs and place accounts in root. Default: False', action='store_true')
+        optional.add_argument('--ignore-failures', dest='ignore_failures', default=False, help='Ignore onboarding failures and continue. Default: False', action='store_true')
     elif mode == '-h' or mode == '--help':
         parser.print_help()
         os._exit(1)
@@ -446,15 +470,16 @@ def main(argv=None):
     print('\nCreating AWS service clients...\n')
     cfclient = boto3.client('cloudformation', region_name=OPTIONS.region_name)
     try: # Check for successful authentication
-        cfclient.list_stacks()    
+        cfclient.list_stacks()      
     except ClientError as e:
         print(f'ERROR: Unable to authenticate to AWS using environment variables or IAM role.')
         os._exit(1)
 
-    if mode == 'organizations':
+    if mode == 'crossaccount':
+        stsclient = boto3.client('sts', region_name=OPTIONS.region_name)
+    elif mode == 'organizations':
         orgclient = boto3.client('organizations', region_name=OPTIONS.region_name)   
         stsclient = boto3.client('sts', region_name=OPTIONS.region_name)
-        caller_account_number = boto3.client('sts', region_name=OPTIONS.region_name).get_caller_identity()['Account'] # Used to identify caller AWS account which needs to be processed without STS assume
 
     # Deploy the respective CFT for the mode
     if OPTIONS.d9mode == ('readonly'):
@@ -468,12 +493,14 @@ def main(argv=None):
         parser.print_help()
         os._exit(1)
 
-    if mode == 'single' and OPTIONS.account_name and OPTIONS.region_name and OPTIONS.d9mode:
+    if mode == 'local' and OPTIONS.account_name and OPTIONS.region_name and OPTIONS.d9mode:
         process_account(cfclient, OPTIONS.account_name)
+    elif mode == 'crossaccount' and OPTIONS.account_number and OPTIONS.account_name and OPTIONS.role_name and OPTIONS.region_name and OPTIONS.d9mode:
+        onboard_crossaccount_account(stsclient)
     elif mode == 'organizations' and OPTIONS.role_name and OPTIONS.region_name and OPTIONS.d9mode:
         if OPTIONS.ignore_ou: # Ignore OU processing flag detected
             print('\nIgnore Organizational Units flag is set to True. All AWS accounts will be placed in root.')
-        sync_aws_organizations(orgclient, stsclient, cfclient, OPTIONS.role_name, caller_account_number)
+        sync_aws_organizations(orgclient, stsclient, cfclient)
     else:
         parser.print_help()
         os._exit(1)
