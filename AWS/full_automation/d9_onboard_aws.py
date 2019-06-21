@@ -158,8 +158,7 @@ def check_cft_stack_exists(cfclient, name):
                 return True
     except ClientError as e:
         print(f'Unexpected error: {e}')
-        return False
-        
+
 def create_cft_stack(cfclient, name, cfturl, extid):
     try:
         resp = cfclient.create_stack(
@@ -367,11 +366,11 @@ def http_request(request_type, url, payload, silent):
     resp = ''
     try:
         if request_type.lower() == 'post':
-            resp = requests.post(url, auth=HTTPBasicAuth(d9id, d9secret), json=payload, headers=headers)
+            resp = requests.post(url, auth=HTTPBasicAuth(os.environ['d9id'], os.environ['d9secret']), json=payload, headers=headers)
         elif request_type.lower() == 'delete':
-            resp = requests.delete(url, auth=HTTPBasicAuth(d9id, d9secret), json=payload, headers=headers)
+            resp = requests.delete(url, auth=HTTPBasicAuth(os.environ['d9id'], os.environ['d9secret']), json=payload, headers=headers)
         elif request_type.lower() == 'get':
-            resp = requests.get(url, auth=HTTPBasicAuth(d9id, d9secret), json=payload, headers=headers)
+            resp = requests.get(url, auth=HTTPBasicAuth(os.environ['d9id'], os.environ['d9secret']), json=payload, headers=headers)
         else:
             print('Request type not supported.')
             return False
@@ -389,18 +388,24 @@ def http_request(request_type, url, payload, silent):
 
 def main(argv=None):
 
-    global d9id, d9secret, cfts3path, d9readonly, OPTIONS
+    global d9id, d9secret, cfts3path, d9readonly, mode, OPTIONS
 
     # handle arguments
     if argv is None:
         argv = sys.argv[2:]
 
-    example_text = f'\nHelp with modes:\n {sys.argv[0]} single --help\n {sys.argv[0]} organizations --help\nExamples:\n {sys.argv[0]} single --d9mode readonly --name "MyAWS PROD" --region us-east-1\n {sys.argv[0]} organizations --d9mode readonly --rolename MyRoleName --region us-east-1 --ignore-failures True --ignore-ou False'
+    example_text = f'\nHelp with modes:\n {sys.argv[0]} single --help\n {sys.argv[0]} organizations --help\nExamples:\n {sys.argv[0]} single --name "MyAWS PROD" --d9mode readonly --region us-east-1\n {sys.argv[0]} organizations --rolename MyRoleName --d9mode readonly --region us-east-1 --ignore-failures True'
 
     parser = argparse.ArgumentParser(
      f'{sys.argv[0]} <single|organizations> [options]',
      epilog=example_text,
      formatter_class=RawTextHelpFormatter)
+    parser._action_groups.pop()
+    required = parser.add_argument_group('required arguments')
+    optional = parser.add_argument_group('optional arguments')
+    
+    optional.add_argument('--region', dest='region_name',default='us-east-1',help='AWS Region Name for Dome9 CFT deployment. Default: us-east-1')
+    optional.add_argument('--d9mode', dest='d9mode', default='readonly', help='readonly/readwrite: Dome9 mode to onboard AWS account as. Default: readonly')
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -412,14 +417,13 @@ def main(argv=None):
     else:
         parser.print_help()        
         os._exit(1)
-    parser.add_argument('--region', dest='region_name',default='us-east-1',help='AWS Region Name for Dome9 CFT deployment. Default: us-east-1')
-    parser.add_argument('--d9mode', dest='d9mode', default='readonly', help='readonly/readwrite: Dome9 mode to onboard AWS account as. Default: readonly')
+
     if mode == 'single':
-        parser.add_argument('--name', dest='account_name', help='Cloud account friendly name in quotes (e.g. "AWS PROD") *')
+        required .add_argument('--name', dest='account_name', help='Cloud account friendly name in quotes (e.g. "AWS PROD")', required=True)
     elif mode == 'organizations':
-        parser.add_argument('--rolename', dest='role_name', help='Name of priviledged AWS role in child accounts for Assume-Role action. (e.g. MyRoleName) *')
-        parser.add_argument('--ignore-ou', dest='ignore_ou', default=False, help='True/False: Ignore AWS Organizations OUs and place accounts in root. Default: False')
-        parser.add_argument('--ignore-failures', dest='ignore_failures', default=False, help='True/False: Ignore onboarding failures and continue. Default: False')
+        required.add_argument('--rolename', dest='role_name', help='Name of priviledged AWS role in child accounts for Assume-Role action. (e.g. MyRoleName)', required=True)
+        optional.add_argument('--ignore-ou', dest='ignore_ou', default=False, help='True/False: Ignore AWS Organizations OUs and place accounts in root. Default: False')
+        optional.add_argument('--ignore-failures', dest='ignore_failures', default=False, help='True/False: Ignore onboarding failures and continue. Default: False')
     elif mode == '-h' or mode == '--help':
         parser.print_help()
         os._exit(1)
@@ -430,64 +434,27 @@ def main(argv=None):
     config = configparser.ConfigParser()
     config.read("./d9_onboard_aws.conf")
 
-    # Get Dome9 API credentials from env variables or config file
-    try:
-        d9id = config.get('dome9', 'd9id')
-        d9secret = config.get('dome9','d9secret')
-        if d9id and d9secret:
-            print('Found Dome9 credentials in d9_onboard_aws.conf')
-        else:
-            d9id = os.environ['d9id']
-            d9secret = os.environ['d9secret']
-            print('Found Dome9 credentials in environment variables')    
-    except KeyError: 
-        print('\nERROR: Dome9 API credentials not found in environment variables or configuration file.')
+    # Get Dome9 API credentials from env variables
+    if os.environ.get('d9id') and os.environ.get('d9id'):
+        d9id = os.environ['d9id']
+        d9secret = os.environ['d9secret']
+    else:
+        print('\nERROR: Dome9 API credentials not found in environment variables.')
         os._exit(1)
-
-    if not d9id or not d9secret or not OPTIONS.d9mode:
-        print ('Please ensure that all config settings in d9_onboard_aws.conf are set.')
-        os._exit(1)
-        
+    
     # Get AWS creds for the client. Region is needed for CFT deployment location.
-    try:
-        awsaccesskey = config.get('aws', 'awsaccesskey')
-        awssecret = config.get('aws', 'awssecret')
-        if awsaccesskey or awssecret:
-            print('Found AWS credentials in d9_onboard_aws.conf')    
-        else:    
-            awsaccesskey = os.environ['aws_access_key_id']
-            awssecret = os.environ['aws_secret_access_key']
-            print('Found AWS credentials in environment variables')        
+    print('\nCreating AWS service clients...\n')
+    cfclient = boto3.client('cloudformation', region_name=OPTIONS.region_name)
+    try: # Check for successful authentication
+        cfclient.list_stacks()    
+    except ClientError as e:
+        print(f'ERROR: Unable to authenticate to AWS using environment variables or IAM role.')
+        os._exit(1)
 
-        # Create Clients for modes single and organizations
-        cfclient = boto3.client('cloudformation',
-         aws_access_key_id=awsaccesskey,
-         aws_secret_access_key=awssecret,
-         region_name=OPTIONS.region_name
-         )
-        if mode == 'organizations':
-            orgclient = boto3.client('organizations',
-             aws_access_key_id=awsaccesskey,
-             aws_secret_access_key=awssecret,
-             region_name=OPTIONS.region_name
-             )
-            stsclient = boto3.client('sts',
-             aws_access_key_id=awsaccesskey,
-             aws_secret_access_key=awssecret,
-             region_name=OPTIONS.region_name
-             ) 
-            caller_account_number = boto3.client('sts',
-             aws_access_key_id=awsaccesskey,
-             aws_secret_access_key=awssecret,
-             region_name=OPTIONS.region_name
-             ).get_caller_identity()['Account']
-    except KeyError:
-        print('\nAWS credentials not found in config file. Using AWS credentials from IAM Role...')
-        cfclient = boto3.client('cloudformation', region_name=region_name)       
-        if mode == 'organizations':
-            orgclient = boto3.client('organizations', region_name=OPTIONS.region_name)   
-            stsclient = boto3.client('sts', region_name=OPTIONS.region_name)
-            caller_account_number = boto3.client('sts', region_name=OPTIONS.region_name).get_caller_identity()['Account'] # Used to identify caller AWS account which needs to be processed without STS assume
+    if mode == 'organizations':
+        orgclient = boto3.client('organizations', region_name=OPTIONS.region_name)   
+        stsclient = boto3.client('sts', region_name=OPTIONS.region_name)
+        caller_account_number = boto3.client('sts', region_name=OPTIONS.region_name).get_caller_identity()['Account'] # Used to identify caller AWS account which needs to be processed without STS assume
 
     # Deploy the respective CFT for the mode
     if OPTIONS.d9mode == ('readonly'):
@@ -501,9 +468,9 @@ def main(argv=None):
         parser.print_help()
         os._exit(1)
 
-    if mode == 'single' and OPTIONS.account_name:
+    if mode == 'single' and OPTIONS.account_name and OPTIONS.region_name and OPTIONS.d9mode:
         process_account(cfclient, OPTIONS.account_name)
-    elif mode == 'organizations' and OPTIONS.role_name:
+    elif mode == 'organizations' and OPTIONS.role_name and OPTIONS.region_name and OPTIONS.d9mode:
         if OPTIONS.ignore_ou: # Ignore OU processing flag detected
             print('\nIgnore Organizational Units flag is set to True. All AWS accounts will be placed in root.')
         sync_aws_organizations(orgclient, stsclient, cfclient, OPTIONS.role_name, caller_account_number)
