@@ -26,8 +26,6 @@ from requests.auth import HTTPBasicAuth
 from requests.exceptions import HTTPError
 from datetime import datetime
 
-d9id = ''
-d9secret = ''
 print(f'\n:: Dome9 AWS Onboarding with CFT Deployment Automation :: \nExecution time: {str(datetime.now())} \n')  # Got an error? You need Python 3.6 or later.
 
 def add_aws_account_to_d9(name, arn, extid, readonly):
@@ -347,7 +345,7 @@ def process_account(cfclient, aws_account_name):
     
     print('\nProvisioning the CloudFormation stack in AWS...')
     extid = ''.join(choice(string.ascii_letters + string.digits) for _ in range(24))
-    stack_created = create_cft_stack(cfclient, d9stack, cfts3path, extid)
+    stack_created = create_cft_stack(cfclient, d9stack, cft_s3_url, extid)
 
     #CHECK CFT STATUS
     t = 0
@@ -408,7 +406,7 @@ def http_request(request_type, url, payload, silent):
 
 def main(argv=None):
 
-    global d9id, d9secret, cfts3path, d9readonly, mode, OPTIONS
+    global d9id, d9secret, cft_s3_url, d9readonly, mode, OPTIONS
 
     # handle arguments
     if argv is None:
@@ -417,7 +415,7 @@ def main(argv=None):
     example_text = f'\nHelp with modes:\n {sys.argv[0]} local --help\n {sys.argv[0]} crossaccount --help\n {sys.argv[0]} organizations --help\nExamples:\n {sys.argv[0]} local --name "AWS DEV" --d9mode readonly --region us-east-1\n {sys.argv[0]} crossaccount --account 987654321012 --name "AWS DEV" --role MyRoleName --d9mode readonly --region us-east-1\n {sys.argv[0]} organizations --role MyRoleName --d9mode readonly --region us-east-1 --ignore-failures'
 
     parser = argparse.ArgumentParser(
-     f'{sys.argv[0]} <local|crossaccount|organizations> [options]',
+     #f'{sys.argv[0]} <local|crossaccount|organizations> required [options]',
      epilog=example_text,
      formatter_class=RawTextHelpFormatter)
     parser._action_groups.pop()
@@ -434,6 +432,10 @@ def main(argv=None):
     if sys.argv[1]:
         mode = sys.argv[1].lower()
         print(f'\nMode: {mode}')
+        if mode not in ['local', 'crossaccount', 'organizations']:
+            print('ERROR: Invalid run mode.\n')
+            parser.print_help()        
+            os._exit(1)
     else:
         parser.print_help()        
         os._exit(1)
@@ -446,8 +448,8 @@ def main(argv=None):
         required.add_argument('--role', dest='role_name', help='AWS cross-account access role for Assume-Role. (e.g. MyRoleName)', required=True)
     elif mode == 'organizations':
         required.add_argument('--role', dest='role_name', help='AWS cross-account access role for Assume-Role. (e.g. MyRoleName)', required=True)
-        optional.add_argument('--ignore-ou', dest='ignore_ou', default=False, help='Ignore AWS Organizations OUs and place accounts in root. Default: False', action='store_true')
-        optional.add_argument('--ignore-failures', dest='ignore_failures', default=False, help='Ignore onboarding failures and continue. Default: False', action='store_true')
+        optional.add_argument('--ignore-ou', dest='ignore_ou', default=False, help='Ignore AWS Organizations OUs and place accounts in root.', action='store_true')
+        optional.add_argument('--ignore-failures', dest='ignore_failures', default=False, help='Ignore onboarding failures and continue.', action='store_true')
     elif mode == '-h' or mode == '--help':
         parser.print_help()
         os._exit(1)
@@ -459,10 +461,7 @@ def main(argv=None):
     config.read("./d9_onboard_aws.conf")
 
     # Get Dome9 API credentials from env variables
-    if os.environ.get('d9id') and os.environ.get('d9id'):
-        d9id = os.environ['d9id']
-        d9secret = os.environ['d9secret']
-    else:
+    if not os.environ.get('d9id') or not os.environ.get('d9id'):
         print('\nERROR: Dome9 API credentials not found in environment variables.')
         os._exit(1)
     
@@ -483,13 +482,13 @@ def main(argv=None):
 
     # Deploy the respective CFT for the mode
     if OPTIONS.d9mode == ('readonly'):
-        cfts3path = config.get('aws', 'cfts3pathro')
+        cft_s3_url = config.get('aws', 'cft_s3_url_readonly')
         d9readonly = True
     elif OPTIONS.d9mode == ('readwrite'):
-        cfts3path = config.get('aws', 'cfts3pathrw')
+        cft_s3_url = config.get('aws', 'cft_s3_url_readwrite')
         d9readonly = False
     else:
-        print ('ERROR: Missing Dome9 mode parameter. Set to "readonly" or "readwrite"')
+        print ('ERROR: Invalid Dome9 mode.')
         parser.print_help()
         os._exit(1)
 
