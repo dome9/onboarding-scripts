@@ -27,7 +27,7 @@ The following explains what this tool does in sequence:
 
 ### Step 1:  Upload Dome9 Platform CFTs to an S3 bucket
 1. Upload CloudFormation templates to an accessible S3 bucket. They can be found [here](https://github.com/Dome9/onboarding-scripts/tree/master/AWS/cloudformation).
-  **Optional**: Use the public CFT URLs predefined in the `d9_onboard_aws.conf` config file. 
+   **Optional**: Use the public CFT URLs predefined in the `d9_onboard_aws.conf` config file. 
 2. Edit  `d9_onboard_aws.conf`.
 3. Set the S3 URLs for `cft_s3_url_readonly` and `cft_s3_url_readwrite`
 4. Save the file.
@@ -53,6 +53,7 @@ The following explains what this tool does in sequence:
 		```
 2. Attach the following IAM Policy to the service-linked role or IAM user that you created.
 	```json
+	{
 	    "Version": "2012-10-17",
 	    "Statement": [
 	        {
@@ -132,22 +133,9 @@ pip3 install boto3 requests
 
 
 ## Operation
+To run the script, review the run modes of the script and the arguments for each mode.
 
-### How to run:
-```bash
-# Syntax
-python d9_onboard_aws.py <local|crossaccount|organizations> [options]
-# Help with run modes
-python d9_onboard_aws.py local --help
-python d9_onboard_aws.py crossaccount --help
-python d9_onboard_aws.py organizations --help
-# Example of each mode
-python d9_onboard_aws.py local --name "AWS DEV" --d9mode readonly --region us-east-1
-python d9_onboard_aws.py crossaccount --account 987654321012 --name "AWS DEV" --role MyRoleName --d9mode readonly --region us-east-1
-python d9_onboard_aws.py organizations --role MyRoleName --d9mode readonly --region us-east-1 --ignore-failures
-```
-
-#### Run Modes
+### Run Modes
 The first argument in the command string determines the run mode of the script. Below is a list of the available run modes.
 Syntax: `python d9_onboard_aws.py <mode> [options]`
 
@@ -157,12 +145,11 @@ Syntax: `python d9_onboard_aws.py <mode> [options]`
 | `crossaccount`   | Onboard subaccounts from a parent account using Assume-Role |
 | `organizations`  | Onboard parent and subaccounts into Dome9 organizational units mapped from AWS Organizations metadata |
 
-### Command Line Arguments ###
+### Global and Mode-specific Arguments ###
 Below are the global and mode-specific arguments.
 
-####  
 * **Global**
-Global arguments are required for all run modes. 
+  Global arguments are required for all run modes. 
 
   * | Argument         | Description                                               | Default value |
     |------------------|-----------------------------------------------------------|---------------|
@@ -188,3 +175,17 @@ Global arguments are required for all run modes.
      | `--role`            | AWS cross-account access role for Assume-Role (**required**) | `MyRoleName` |
      | `--ignore-ou`       | Ignore AWS Organizations OUs and place accounts in root.     | |
      | `--ignore-failures` | Ignore onboarding failures and continue.                     |
+
+### How to run:
+```bash
+# Syntax
+python d9_onboard_aws.py <local|crossaccount|organizations> [options]
+# Help with run modes
+python d9_onboard_aws.py local --help
+python d9_onboard_aws.py crossaccount --help
+python d9_onboard_aws.py organizations --help
+# Example of each mode
+python d9_onboard_aws.py local --name "AWS DEV" --d9mode readonly --region us-east-1
+python d9_onboard_aws.py crossaccount --account 987654321012 --name "AWS DEV" --role MyRoleName --d9mode readonly --region us-east-1
+python d9_onboard_aws.py organizations --role MyRoleName --d9mode readonly --region us-east-1 --ignore-failures
+```

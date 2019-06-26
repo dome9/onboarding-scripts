@@ -223,7 +223,7 @@ def process_organizatonal_units(aws_ou_list):
     
     return last_ou
 
-def onboard_crossaccount_account(stsclient):
+def mode_crossaccount_onboard(stsclient):
     assume_role_arn = 'arn:aws:iam::' + OPTIONS.account_number + ':role/' + OPTIONS.role_name # Build role ARN of target account being onboarded to assume into
     print(f'\nAssuming Role into target account using ARN: {assume_role_arn}') 
 
@@ -241,7 +241,7 @@ def onboard_crossaccount_account(stsclient):
 
     process_account(cfclient, OPTIONS.account_name)
 
-def sync_aws_organizations(orgclient, stsclient, cfclient):
+def mode_organizations_onboard(orgclient, stsclient, cfclient):
 
     # function to print stats upon completion
     def _print_stats(discovered, successes, failures):
@@ -495,11 +495,11 @@ def main(argv=None):
     if mode == 'local' and OPTIONS.account_name and OPTIONS.region_name and OPTIONS.d9mode:
         process_account(cfclient, OPTIONS.account_name)
     elif mode == 'crossaccount' and OPTIONS.account_number and OPTIONS.account_name and OPTIONS.role_name and OPTIONS.region_name and OPTIONS.d9mode:
-        onboard_crossaccount_account(stsclient)
+        mode_crossaccount_onboard(stsclient)
     elif mode == 'organizations' and OPTIONS.role_name and OPTIONS.region_name and OPTIONS.d9mode:
         if OPTIONS.ignore_ou: # Ignore OU processing flag detected
             print('\nIgnore Organizational Units flag is set to True. All AWS accounts will be placed in root.')
-        sync_aws_organizations(orgclient, stsclient, cfclient)
+        mode_organizations_onboard(orgclient, stsclient, cfclient)
     else:
         parser.print_help()
         os._exit(1)
