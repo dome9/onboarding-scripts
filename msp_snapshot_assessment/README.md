@@ -30,6 +30,8 @@ The following explains what this tool does in sequence:
 * Install Git. Verify: `git --version`
 	```bash
 	# Intall Git on RHEL 8
+	```
+	```bash
 	sudo yum install git -y
 	# Install Git on Ubuntu 18.04
 	sudo apt-get install git -y
@@ -52,7 +54,7 @@ The following explains what this tool does in sequence:
 ## Installation ##
 1. Clone this repo into your local environment
 
-`git clone https://github.com/Dome9/onboarding-scripts.git`
+	`git clone https://github.com/Dome9/onboarding-scripts.git`
 
 2. Navigate to the msp_snapshot_asssessment directory:
 
@@ -60,6 +62,11 @@ The following explains what this tool does in sequence:
 
 3. [Get Dome9 V2 API id and secret key](https://secure.dome9.com/v2/settings/credentials)
    * Option 1: Set local environment variables `d9id` and `d9secret` with their respective values.
+	```bash
+	# Dome9 V2 API Credentials
+	export d9id=12345678-1234-1234-1234-123456789012
+	export d9secret=abcdefghijklmnopqrstuvwx
+	```
    * Option 2: Edit d9_account.conf and populate `d9id` and `d9secret` with their respective values.
 
 ## How to run ##
@@ -69,11 +76,11 @@ The following explains what this tool does in sequence:
    * In the right-pane, click on a **ruleset** from the list to open.
    * Look to the browser address bar. The ruleset id is the number in the URL following the last **forward slash**
      * Example: AWS PCI-DSS 3.2 has url: `https://secure.dome9.com/v2/compliance-engine/policy/-2` therefore the ruleset id = `-2`
-2. In the console, navigate to the respective directory (`onboarding-scripts/snapshot_assessment`)
+2. In the console, navigate to the respective directory (`onboarding-scripts/msp_snapshot_assessment`)
 3. Run the script using a set mode <aws/azure/gcp> with the respective options. Below is the syntax with examples.
 ```bash
 # Syntax
-python3 snapshot_assessment.py [mode] [options] 
+python3 snapshot_assessment.py <mode> [options] 
 # Help with modes
 python3 snapshot_assessment.py aws --help 
 python3 snapshot_assessment.py azure --help 
