@@ -8,7 +8,7 @@ This is a fully automated solution to onboard accounts into Dome9 using three op
 * Cross-account onboarding of child accounts from a parent AWS account
 * AWS Organizations synchronization of accounts and organizational units (OUs) for onboarding
 
-**How it works**
+#### How it works
 There are CloudFormation templates (CFTs) staged in S3 which are used to create an IAM policy and cross-account access role in each target AWS account to be onboarded to Dome9. There are two CFTs to choose from, depending on the desired Dome9 mode: read-only or read-write. Once the CloudFormation stack is successfully deployed, the script will then add the target account into Dome9. If you are using AWS Organizations, the target account will be placed in the appropriate Dome9 OU.
 
 ## **Process Summary** 
@@ -25,7 +25,7 @@ The following explains what this tool does in sequence at a high level:
 10. [Organizations Mode] Place the target AWS Account into a Dome9 OU which mirrors the AWS Organizations OU.
 
 ## Requirements
-* IAM permissions to create IAM policies in target AWS accounts.
+* IAM permissions to create CloudFormation Stacks, IAM Policies, and IAM Roles in target AWS accounts.
 * Python v3.6 or later. Verify: `python3 --version`
 	```bash
 	# Install Python v3.6 and PIP on RHEL 8 
@@ -50,7 +50,7 @@ The following explains what this tool does in sequence at a high level:
 ## Assumptions
 The following assumptions are made about the environment to be successful running the script.
 * AWS Organizations Onboarding
-  * Any account created in AWS Organizations has a cross-account access role with a consistent name (e.g. MyOrgsAdminRole) and with the minimal IAM permissions. Not having a consistent role name will require running the script multiple times. Below is an example of the IAM policy required to be attached to the role in order to onboard the account into Dome9 using this script:	
+  * Any account created in AWS Organizations has a cross-account access role with a consistent name (e.g. MyOrgsAdminRole) and with the minimal IAM permissions. The parent account will assume-role of the child account with this role. Not having a consistent role name will require running the script multiple times. Below is an example of the IAM policy required to be attached to the role in order to onboard the account into Dome9 using this script:	
 	```json
 	{
 	    "Version": "2012-10-17",
