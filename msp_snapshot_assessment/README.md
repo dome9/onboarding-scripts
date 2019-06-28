@@ -1,9 +1,9 @@
 
-# **MSP Dome9 Snapshot Compliance Assessment Tool** #
+# **MSP Dome9 Snapshot Compliance Assessment Tool** 
 A command line tool to run a Dome9, one-time, snapshot compliance assessment of a cloud account for MSPs.<br/>
 AWS, Microsoft Azure, and Google Cloud Platform (GCP) are supported. The average runtime is about 10 minutes and will auto-cleanup upon completion.
 
-## Process Summary ##
+## Process Summary
 The following explains what this tool does in sequence:
 1. Onboards target account into Dome9 using the API
 2. Waits 5 minutes for initial account sync to complete 
@@ -13,7 +13,7 @@ The following explains what this tool does in sequence:
 6. Cleanup 
    * Note: Cloud accounts are global in Dome9. If an account is not removed it will not be available for onboarding in any other Dome9 account.
 
-## Requirements ##
+## Requirements 
 * Python v3.6 or later. Verify: `python3 --version`
 	```bash
 	# Install Python v3.6 and PIP on RHEL 8 
@@ -38,7 +38,7 @@ The following explains what this tool does in sequence:
 	```
 * Access to IAM for a AWS, Azure, or GCP (or know who does) to create Dome9 read permissions.
 * AWS account with Dome9-Connect cross-account access role deployed.
-   * [ ] Create permissions for Dome9. [Manual](https://helpcenter.dome9.com/hc/en-us/articles/360003994613-Onboard-an-AWS-Account) (Steps 3-19) | [CFT](https://github.com/Dome9/onboarding-scripts/tree/master/AWS/cloudformation) | [Script](https://github.com/Dome9/onboarding-scripts/tree/master/AWS/cft_with_d9_api_automation)
+   * [ ] Create permissions for Dome9. [Manual](https://helpcenter.dome9.com/hc/en-us/articles/360003994613-Onboard-an-AWS-Account) (Steps 3-19) | [CFT](https://github.com/Dome9/onboarding-scripts/tree/master/AWS/cloudformation) | [Script](https://github.com/Dome9/onboarding-scripts/tree/master/AWS/full_automation)
    * [ ] Role ARN. Account ID is derived from this. e.g. `arn:aws:iam::012345678912:role/Dome9-Connect`
    * [ ] External ID used when creating the role. **THIS MUST MATCH**. e.g. `bkbj00xuTAM102IceF054321`
 * Azure subscription with Dome9-Connect App Registration. 
@@ -51,7 +51,7 @@ The following explains what this tool does in sequence:
    * [ ] Create permissions for Dome9. [Manual](https://helpcenter.dome9.com/hc/en-us/articles/360003962974-Onboard-a-Google-Cloud-Project-to-Dome9) (Steps 2-15) | [Script](https://github.com/Dome9/onboarding-scripts/tree/master/GCP) 
    * [ ] API Service Account credential key file in JSON format. e.g. `mykey.json`
 
-## Installation ##
+## Installation 
 1. Clone this repo into your local environment
 
 	`git clone https://github.com/Dome9/onboarding-scripts.git`
@@ -69,7 +69,7 @@ The following explains what this tool does in sequence:
 	```
    * Option 2: Edit d9_account.conf and populate `d9id` and `d9secret` with their respective values.
 
-## How to run ##
+## How to run 
 1. [Optional] Choose a Dome9 compliance ruleset (Default is NIST 800-53 Rev 4)
    * In Dome9, click **Compliance & Governance**  > **Rulesets**
    * Use the **Platform** filter on the left and choose a cloud provider.
@@ -93,13 +93,13 @@ python3 snapshot_assessment.py azure --name testazureaccount --email user@domain
 # GCP Example
 python3 snapshot_assessment.py gcp --name testgcpaccount --email name@domain.com --keyfile ./mykey.json
 ```
-### Command Line Modes ###
+### Command Line Modes 
 The mode indicates the public cloud provider type of the target account being assessed:
 * `aws` : Amazon Web Services
 * `azure` : Microsoft Azure
 * `gcp` : Google Cloud Platform
 
-### Command Line Options ###
+### Command Line Options
 Common Options
 * `--name` : Friendly name of the cloud account (No spaces) (**required**)
 * `--email` : E-mail address to send compliance report (**required**)
@@ -120,3 +120,16 @@ Azure Mode Options
 GCP Mode Options
 * `--keyfile` : Path to GCP key file in JSON format of the Dome9 service account (**required**)
 * `--rulesetid` : GCP-specific Dome9 Compliance Ruleset ID. Default: `-25` (NIST 800-53)
+
+## Manual Cleanup
+If the script is unexpectedly terminated, residual assets in Dome9 may be left behind and should be cleaned up. Not doing so could have licensing implications and also prevent the account from being used in other Dome9 accounts.
+### Cleanup Process
+1. In Dome9, click **Compliance & Governance** > **Policies**
+2. In the list, find the account that was last used by the script.
+3. Mouse-over any policy name that may be listed under the account. Icons will appear on the right.
+4. Click the **Unassociate Policy** icon then click the **Unassociate** button.
+5. Click the **Notifications** tab at the top.
+6. Find and delete any **Notification Policy** with "**_snapshot_**" in the name.
+7. Click **Cloud Inventory** > **Cloud Accounts**
+8. Find and click on the account that was last used by the script.
+9. Click the **Remove** button twice.
