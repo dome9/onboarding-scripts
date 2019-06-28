@@ -1,33 +1,88 @@
 
 
+
 # Dome9 Full Automation of AWS Account Onboarding
 
-This is the fully automated option that will create the cross-account role on the target account, and then link the account to Dome9 via API. 
+This is a fully automated solution to onboard accounts into Dome9 using three options:
+* Simple onboarding of an AWS account using local IAM users or roles 
+* Cross-account onboarding of child accounts from a parent AWS account
+* AWS Organizations synchronization of accounts and organizational units (OUs) for onboarding
 
-This is a simple example script to understand how to leverage automation,
-including both AWS CloudFormation templates and this script, to add an AWS
-account to a Dome9 account.
+**How it works**
+There are CloudFormation templates (CFTs) staged in S3 which are used to create an IAM policy and cross-account access role in each target AWS account to be onboarded to Dome9. There are two CFTs to choose from, depending on the desired Dome9 mode: read-only or read-write. Once the CloudFormation stack is successfully deployed, the script will then add the target account into Dome9. If you are using AWS Organizations, the target account will be placed in the appropriate Dome9 OU.
 
-## **Process Summary** ##
-The following explains what this tool does in sequence:
-1. Check if a AWS CFT stack conflict exists.
-2. Randomly generate an external ID for the IAM cross-account access role.
-3. Deploy the respective CFT for the Dome9 mode selected.
-4. Wait until the CFT deployment is completed
-5. Pull outputs from CFT stack
-6. Add AWS Account to Dome9
+## **Process Summary** 
+The following explains what this tool does in sequence at a high level:
+1. [Organizations Mode] Discover AWS subaccounts and their respective OUs from AWS Organziations.
+2. [Organizations Mode] Compare it to the accounts already onboarded to Dome9 and generate a list of accounts to onboard.
+3. [Organizations/Cross-account Mode] Assume-role into those accounts using an cross-account access role.
+4. Check if a CloudFormation stack for Dome9 already exists in the region.
+5. Randomly generate an external ID for a cross-account access role.
+6. Deploy the respective CFT for the Dome9 mode selected (read-only/read-write), creating a cross-account access role.
+7. Wait until the CFT deployment is completed.
+8. Pull outputs from CFT stack.
+9. Add AWS Account to Dome9.
+10. [Organizations Mode] Place the target AWS Account into a Dome9 OU which mirrors the AWS Organizations OU.
 
-## Requirements ##
-* Python 3.6 or later. Verify: `python3 --version`
-* Permissions to create IAM policies in targets AWS accounts.
+## Requirements
+* IAM permissions to create IAM policies in target AWS accounts.
+* Python v3.6 or later. Verify: `python3 --version`
+	```bash
+	# Install Python v3.6 and PIP on RHEL 8 
+	sudo yum update
+	sudo yum install python36 python3-pip -y
+	```
+	```bash
+	# Install Python v3.6 and PIP on Ubuntu 18.04
+	sudo apt-get update
+	sudo apt-get install python3 python3-pip -y
+	```
+* Install Git. Verify: `git --version`
+	```bash
+	# Intall Git on RHEL
+	sudo yum install git -y
+	```
+	```bash
+	# Install Git on Ubuntu
+	sudo apt-get install git -y
+	```
 
-
+## Assumptions
+The following assumptions are made about the environment to be successful running the script.
+* AWS Organizations Onboarding
+  * Any account created in AWS Organizations has a cross-account access role with a consistent name (e.g. MyOrgsAdminRole) and with the minimal IAM permissions. Not having a consistent role name will require running the script multiple times. Below is an example of the IAM policy required to be attached to the role in order to onboard the account into Dome9 using this script:	
+	```json
+	{
+	    "Version": "2012-10-17",
+	    "Statement": [
+	        {
+	            "Sid": "D9FULLAUTOMATIONSUBACCOUNT",
+	            "Effect": "Allow",
+	            "Action": [
+	                "iam:ListPolicies",
+	                "iam:GetRole*",
+	                "iam:ListRole*",
+	                "iam:PutRolePolicy",
+	                "iam:CreateRole",
+	                "iam:AttachRolePolicy",
+	                "iam:CreatePolicy",
+	                "cloudformation:List*",
+	                "cloudformation:Create*",
+	                "cloudformation:Describe*"
+	            ],
+	            "Resource": "*"
+	        }
+	    ]
+	}
+	```
+* Cross-account Onboarding
+  * The `crossaccount` mode requires the same IAM permissions in the target accounts as above. 
 
 ## Setup
 
 ### Step 1:  Upload Dome9 Platform CFTs to an S3 bucket
 1. Upload CloudFormation templates to an accessible S3 bucket. They can be found [here](https://github.com/Dome9/onboarding-scripts/tree/master/AWS/cloudformation).
-   **Optional**: Use the public CFT URLs predefined in the `d9_onboard_aws.conf` config file. 
+   **Optional**: Use the public CFT URLs predefined in the `d9_onboard_aws.conf` file and skip the rest of this section.
 2. Edit  `d9_onboard_aws.conf`.
 3. Set the S3 URLs for `cft_s3_url_readonly` and `cft_s3_url_readwrite`
 4. Save the file.
@@ -37,7 +92,7 @@ The following explains what this tool does in sequence:
 1. Create your Dome9 V2 API Credentials [here](https://secure.dome9.com/v2/settings/credentials).
 2. Set the environment variables.
 	```bash
-	# Dome9 V2 API Credentials
+	# Dome9 V2 API Credentials Example
 	export d9id=12345678-1234-1234-1234-123456789012
 	export d9secret=abcdefghijklmnopqrstuvwx
 	```
@@ -45,9 +100,9 @@ The following explains what this tool does in sequence:
 
 1. Get IAM Credentials
    - Option 1: Run the script on an AWS resource which uses a service-linked role. The script will dynamically find the credentials without the need to specify environment variables.
-   - Option 2: Create an IAM User access keys and set the environment variables. 
+   - Option 2: Create IAM User access keys and set the environment variables. 
 		```bash
-		# AWS Credentials 
+		# AWS Credentials Example
 		export AWS_ACCESS_KEY_ID=AK00012300012300TEST
 		export AWS_SECRET_ACCESS_KEY=Nnnnn12345nnNnn67890nnNnn12345nnNnn67890
 		```
@@ -79,57 +134,14 @@ The following explains what this tool does in sequence:
 	    ]
 	}
 	```
-
-
-### Step 4 : Setup IAM resources for Parent and Cross-Accounts
-
-
-#### _IAM Policy for Subaccounts_
-This IAM policy is attached to a cross-account access role in AWS subaccounts.
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "D9FULLAUTOMATIONSUBACCOUNT",
-            "Effect": "Allow",
-            "Action": [
-                "iam:ListPolicies",
-                "iam:GetRole*",
-                "iam:ListRole*",
-                "iam:PutRolePolicy",
-                "iam:CreateRole",
-                "iam:AttachRolePolicy",
-                "iam:CreatePolicy",
-                "cloudformation:List*",
-                "cloudformation:Create*",
-                "cloudformation:Describe*"
-            ],
-            "Resource": "*"
-        }
-    ]
-}
-```
-
-- Create IAM user access keys or use a IAM role for your server.
-API.  These credentials must have rights to create IAM roles and policies, as
-well for the CloudFormation provisioning process to work.
-
-- Note the https based path and filename of each of these CFTs and record them in
-the d9_aws_acct_add.conf file.
-
-- Ensure that both your Dome9 API keys and AWS API keys exist in this file as
-well.
-
-- Set region_name to the region you would like this CloudFormation template to be deployed to
-
-- The last element of configuration in the .conf file is d9mode.  This can be one
-of readwrite or readonly.  Case matters.
-
-- Install dependencies
-```bash
-pip3 install boto3 requests
-```
+### Step 4 : Install Python Dependencies
+Using PIP, install the following python dependencies:
+* boto3
+* requests
+  ```bash
+  # Install python dependencies
+  pip3 install boto3 requests
+  ```
 
 
 ## Operation
@@ -141,11 +153,11 @@ Syntax: `python d9_onboard_aws.py <mode> [options]`
 
 | Run Mode         | Description                        
 |------------------|---------------------------------------------------------------|
-| `local`          | Onboard local account running the script only  |
-| `crossaccount`   | Onboard subaccounts from a parent account using Assume-Role |
-| `organizations`  | Onboard parent and subaccounts into Dome9 organizational units mapped from AWS Organizations metadata |
+| `local`          | Onboard the AWS account running the script only  |
+| `crossaccount`   | Onboard an AWS account using Assume-Role |
+| `organizations`  | Onboard parent and subaccounts and attach them to Dome9 organizational units mapped from AWS Organizations metadata |
 
-### Global and Mode-specific Arguments ###
+### Global and Mode-specific Arguments 
 Below are the global and mode-specific arguments.
 
 * **Global**
