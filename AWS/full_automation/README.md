@@ -1,20 +1,17 @@
-
-
-
 # Dome9 Full Automation of AWS Account Onboarding
 
 This is a fully automated solution to onboard accounts into Dome9 using three options:
-* Simple onboarding of an AWS account using local IAM users or roles 
+* Simple onboarding of the AWS account that is running the script
 * Cross-account onboarding of child accounts from a parent AWS account
 * AWS Organizations synchronization of accounts and organizational units (OUs) for onboarding
 
 #### How it works
-There are CloudFormation templates (CFTs) staged in S3 which are used to create an IAM policy and cross-account access role in each target AWS account to be onboarded to Dome9. There are two CFTs to choose from, depending on the desired Dome9 mode: read-only or read-write. Once the CloudFormation stack is successfully deployed, the script will then add the target account into Dome9. If you are using AWS Organizations, the target account will be placed in the appropriate Dome9 OU.
+There are CloudFormation templates (CFTs) staged in S3 which are used to create an IAM policy and cross-account access role in each target AWS account to be onboarded in Dome9. There are two CFTs to choose from, depending on the desired Dome9 mode: read-only or read-write. Once the CloudFormation stack is successfully deployed, the script will then add the target account into Dome9. If you are using AWS Organizations, the target account will discovered automatically and onboarded in Dome9.
 
 ## **Process Summary** 
 The following explains what this tool does in sequence at a high level:
-1. [Organizations Mode] Discover AWS subaccounts and their respective OUs from AWS Organziations and compare them against Dome9.
-2. [Organizations/Cross-account Mode] Assume-role into AWS subaccounts to create a CloudFormation stack.
+1. [Organizations Mode] Discover AWS child accounts and their respective OUs from AWS Organziations and compare them against Dome9.
+2. [Organizations/Cross-account Mode] Assume-role into AWS child accounts to create a CloudFormation stack.
 3. Check if a CloudFormation stack for Dome9 already exists in the region.
 4. Randomly generate an external ID for a cross-account access role.
 5. Deploy the respective CFT for the Dome9 selected mode (read-only/read-write), creating a new cross-account access role.
@@ -25,7 +22,7 @@ The following explains what this tool does in sequence at a high level:
 
 ## Requirements
 * IAM permissions to create CloudFormation Stacks, IAM Policies, and IAM Roles in target AWS accounts.
-* Python v3.6 or later. Verify: `python3 --version`
+* Python v3.6 or later. 
 	```bash
 	# Install Python v3.6 and PIP on RHEL 8 
 	sudo yum update
@@ -36,7 +33,8 @@ The following explains what this tool does in sequence at a high level:
 	sudo apt-get update
 	sudo apt-get install python3 python3-pip -y
 	```
-* Install Git. Verify: `git --version`
+	Verify: `python3 --version`
+* Git Command Line Tools
 	```bash
 	# Intall Git on RHEL
 	sudo yum install git -y
@@ -45,6 +43,7 @@ The following explains what this tool does in sequence at a high level:
 	# Install Git on Ubuntu
 	sudo apt-get install git -y
 	```
+	Verify: `git --version`
 
 ## Assumptions
 The following assumptions are made about the environment to be successful running the script.
@@ -55,7 +54,7 @@ The following assumptions are made about the environment to be successful runnin
 	    "Version": "2012-10-17",
 	    "Statement": [
 	        {
-	            "Sid": "D9FULLAUTOMATIONSUBACCOUNT",
+	            "Sid": "D9FULLAUTOMATIONCHILDACCOUNT",
 	            "Effect": "Allow",
 	            "Action": [
 	                "iam:ListPolicies",
@@ -160,7 +159,7 @@ Syntax: `python d9_onboard_aws.py <mode> [options]`
 |------------------|---------------------------------------------------------------|
 | `local`          | Onboard the AWS account running the script only  |
 | `crossaccount`   | Onboard an AWS account using Assume-Role |
-| `organizations`  | Onboard parent and subaccounts and attach them to Dome9 organizational units mapped from AWS Organizations metadata |
+| `organizations`  | Onboard parent and child accounts and attach them to Dome9 organizational units mapped from AWS Organizations metadata |
 
 ### Global and Mode-specific Arguments 
 Below are the global and mode-specific arguments.
