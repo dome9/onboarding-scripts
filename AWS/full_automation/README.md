@@ -79,12 +79,14 @@ The following assumptions are made about the environment to be successful runnin
 ## Setup
 
 ### Step 1: Clone the repo and Install Dependencies
-1. Clone this repo into your local environment
-	`git clone https://github.com/Dome9/onboarding-scripts.git`
-
+1. Clone this repo into your local environment:
+	```bash
+	git clone https://github.com/Dome9/onboarding-scripts.git`
+	```
 2. Navigate to the script subdirectory:
-	`cd onboarding-scripts/AWS/full_automation`
-
+	```bash
+	cd onboarding-scripts/AWS/full_automation
+	```
 3. Using PIP, install the following python dependencies:
    * boto3
    * requests
@@ -119,7 +121,7 @@ The following assumptions are made about the environment to be successful runnin
 		export AWS_ACCESS_KEY_ID=AK00012300012300TEST
 		export AWS_SECRET_ACCESS_KEY=Nnnnn12345nnNnn67890nnNnn12345nnNnn67890
 		```
-2. Attach the following IAM Policy to the service-linked role or IAM user that you created.
+2. Attach the following IAM Policy to the service-linked role or IAM user that you created. 
 	```json
 	{
 	    "Version": "2012-10-17",
@@ -147,6 +149,7 @@ The following assumptions are made about the environment to be successful runnin
 	    ]
 	}
 	```
+	> Note: The `iam:*` and `cloudformation:*` permissions in this policy are required if the parent AWS account that this script is being executed from is unprotected by Dome9 and you would like to have it onboarded also.
 
 ## Operation
 To run the script, review the run modes of the script and the arguments for each mode.
