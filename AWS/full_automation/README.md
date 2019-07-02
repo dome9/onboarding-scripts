@@ -35,7 +35,7 @@ The following explains what this tool does in sequence at a high level:
 	sudo apt-get install python3 python3-pip -y
 	alias python=python3
 	```
-	Verify: `python3 --version`
+	Verify: `python --version`
 * Git Command Line Tools
 	```bash
 	# Intall Git on RHEL
