@@ -25,13 +25,15 @@ The following explains what this tool does in sequence at a high level:
 * Python v3.6 or later. 
 	```bash
 	# Install Python v3.6 and PIP on RHEL 8 
-	sudo yum update
+	sudo yum update -y
 	sudo yum install python36 python3-pip -y
+	alias python=python3
 	```
 	```bash
 	# Install Python v3.6 and PIP on Ubuntu 18.04
-	sudo apt-get update
+	sudo apt-get update -y
 	sudo apt-get install python3 python3-pip -y
+	alias python=python3
 	```
 	Verify: `python3 --version`
 * Git Command Line Tools
@@ -81,7 +83,7 @@ The following assumptions are made about the environment to be successful runnin
 ### Step 1: Clone the repo and Install Dependencies
 1. Clone this repo into your local environment:
 	```bash
-	git clone https://github.com/Dome9/onboarding-scripts.git`
+	git clone https://github.com/Dome9/onboarding-scripts.git
 	```
 2. Navigate to the script subdirectory:
 	```bash
@@ -92,7 +94,7 @@ The following assumptions are made about the environment to be successful runnin
    * requests
 	```bash
 	# Install python dependencies
-	pip3 install boto3 requests
+	pip3 install boto3 requests #Run as 'sudo' if you receive errors.
 	```
 
 ### Step 2:  Upload Dome9 Platform CFTs to an S3 bucket
