@@ -132,16 +132,6 @@ The following assumptions are made about the environment to be successful runnin
 	            "Sid": "D9FULLAUTOMATIONPARENT",
 	            "Effect": "Allow",
 	            "Action": [
-	                "iam:ListPolicies",
-	                "iam:GetRole*",
-	                "iam:ListRole*",
-	                "iam:PutRolePolicy",
-	                "iam:CreateRole",
-	                "iam:AttachRolePolicy",
-	                "iam:CreatePolicy",
-	                "cloudformation:List*",
-	                "cloudformation:Create*",
-	                "cloudformation:Describe*",
 	                "sts:*",
 	                "organizations:Describe*",
 	                "organizations:List*"
@@ -151,8 +141,8 @@ The following assumptions are made about the environment to be successful runnin
 	    ]
 	}
 	```
-	> Note: The `iam:*` and `cloudformation:*` permissions in this policy are required if the parent AWS account that this script is being executed from is unprotected by Dome9 and you would like to have it onboarded also.
-
+	> Note: If you would like the parent AWS account to be onboarded in Dome9 by the script you will need to also attach the same IAM policy as the child accounts, as seen in the Assumptions section above.
+	
 ## Operation
 To run the script, review the run modes of the script and the arguments for each mode.
 
