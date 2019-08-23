@@ -48,7 +48,7 @@ The following explains what this tool does in sequence:
    * [ ] App ID (Client ID) for App Registration.  e.g `3f546116-33c9-4b70-9186-250100654321`
    * [ ] Secret Key for App Registration. e.g. `1HmMAz[PLyAm/u/9gW+V8xb33c654321`
 * GCP project with Dome9-Connect service account. 
-   * [ ] Create permissions for Dome9. [Manual](https://sc1.checkpoint.com/documents/CloudGuard_Dome9/Documentation/Cloud-Inventory/OnboardGCP.html (Steps 2-15) | [Script](https://github.com/Dome9/onboarding-scripts/tree/master/GCP) 
+   * [ ] Create permissions for Dome9. [Manual](https://sc1.checkpoint.com/documents/CloudGuard_Dome9/Documentation/Cloud-Inventory/OnboardGCP.html) (Steps 2-15) | [Script](https://github.com/Dome9/onboarding-scripts/tree/master/GCP) 
    * [ ] API Service Account credential key file in JSON format. e.g. `mykey.json`
 
 ## Installation 
