@@ -38,7 +38,7 @@ The following explains what this tool does in sequence:
 	```
 * Access to IAM for a AWS, Azure, or GCP (or know who does) to create Dome9 read permissions.
 * AWS account with Dome9-Connect cross-account access role deployed.
-   * [ ] Create permissions for Dome9. [Manual](https://helpcenter.dome9.com/hc/en-us/articles/360003994613-Onboard-an-AWS-Account) (Steps 3-19) | [CFT](https://github.com/Dome9/onboarding-scripts/tree/master/AWS/cloudformation) | [Script](https://github.com/Dome9/onboarding-scripts/tree/master/AWS/full_automation)
+   * [ ] Create permissions for Dome9. [Manual](https://sc1.checkpoint.com/documents/CloudGuard_Dome9/Documentation/Cloud-Inventory/OnboardAWS.html) (Steps 3-19) | [CFT](https://github.com/Dome9/onboarding-scripts/tree/master/AWS/cloudformation) | [Script](https://github.com/Dome9/onboarding-scripts/tree/master/AWS/full_automation)
    * [ ] Role ARN. Account ID is derived from this. e.g. `arn:aws:iam::012345678912:role/Dome9-Connect`
    * [ ] External ID used when creating the role. **THIS MUST MATCH**. e.g. `bkbj00xuTAM102IceF054321`
 * Azure subscription with Dome9-Connect App Registration. 
