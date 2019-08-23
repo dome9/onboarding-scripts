@@ -42,13 +42,13 @@ The following explains what this tool does in sequence:
    * [ ] Role ARN. Account ID is derived from this. e.g. `arn:aws:iam::012345678912:role/Dome9-Connect`
    * [ ] External ID used when creating the role. **THIS MUST MATCH**. e.g. `bkbj00xuTAM102IceF054321`
 * Azure subscription with Dome9-Connect App Registration. 
-   * [ ] Create permissions for Dome9. [Manual](https://helpcenter.dome9.com/hc/en-us/articles/360003994693-Onboard-an-Azure-Subscription-to-Dome9) (Steps 3-22) | [Script](https://github.com/Dome9/onboarding-scripts/tree/master/Azure) 
+   * [ ] Create permissions for Dome9. [Manual](https://sc1.checkpoint.com/documents/CloudGuard_Dome9/Documentation/Cloud-Inventory/OnboardAzure.html) (Steps 3-22) | [Script](https://github.com/Dome9/onboarding-scripts/tree/master/Azure) 
    * [ ] Subscription ID. e.g. `7b7d6c48-c533-4a22-a653-374548654321`
    * [ ] Tenant ID (Active Directory ID). e.g. `c73f8e89-005d-4cb5-8c90-82bead654321`
    * [ ] App ID (Client ID) for App Registration.  e.g `3f546116-33c9-4b70-9186-250100654321`
    * [ ] Secret Key for App Registration. e.g. `1HmMAz[PLyAm/u/9gW+V8xb33c654321`
 * GCP project with Dome9-Connect service account. 
-   * [ ] Create permissions for Dome9. [Manual](https://helpcenter.dome9.com/hc/en-us/articles/360003962974-Onboard-a-Google-Cloud-Project-to-Dome9) (Steps 2-15) | [Script](https://github.com/Dome9/onboarding-scripts/tree/master/GCP) 
+   * [ ] Create permissions for Dome9. [Manual](https://sc1.checkpoint.com/documents/CloudGuard_Dome9/Documentation/Cloud-Inventory/OnboardGCP.html (Steps 2-15) | [Script](https://github.com/Dome9/onboarding-scripts/tree/master/GCP) 
    * [ ] API Service Account credential key file in JSON format. e.g. `mykey.json`
 
 ## Installation 
