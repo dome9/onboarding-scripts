@@ -6,7 +6,7 @@ This is a fully automated solution to onboard accounts into Dome9 using three op
 * AWS Organizations synchronization of accounts and organizational units (OUs) for onboarding
 
 #### How it works
-There are CloudFormation templates (CFTs) staged in S3 which are used to create an IAM policy and cross-account access role in each target AWS account to be onboarded in Dome9. There are two CFTs to choose from, depending on the desired Dome9 mode: read-only or read-write. Once the CloudFormation stack is successfully deployed, the script will then add the target account into Dome9. If you are using AWS Organizations, the target account will discovered automatically and onboarded in Dome9.
+There are CloudFormation templates (CFTs) staged in S3 which are used to create an IAM policy and cross-account access role in each target AWS account to be onboarded in Dome9. There are two CFTs to choose from, depending on the desired Dome9 mode: read-only or read-write. Once the CloudFormation stack is successfully deployed, the script will then add the target account into Dome9. If you are using AWS Organizations, the target account will be discovered automatically and then onboarded in Dome9.
 
 ## **Process Summary** 
 The following explains what this tool does in sequence at a high level:
