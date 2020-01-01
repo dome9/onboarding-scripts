@@ -309,7 +309,7 @@ def mode_organizations_onboard(orgclient, stsclient, cfclient):
                 DurationSeconds=1800
                 )
             except ClientError:
-                print("Could not assume role for account {}".format(account['name']))
+                print(f'\nCould not assume role for account {account["name"]}')
                 count_failures += 1
                 if OPTIONS.ignore_failures:
                     continue
