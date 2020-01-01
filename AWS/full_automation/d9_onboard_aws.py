@@ -302,11 +302,19 @@ def mode_organizations_onboard(orgclient, stsclient, cfclient):
             assume_role_arn = 'arn:aws:iam::' + account['id'] + ':role/' + OPTIONS.role_name # Build role ARN of target account being onboarded to assume into
             print(f'\nAssuming Role into target account using ARN: {assume_role_arn}') 
 
-            stsresp = stsclient.assume_role(
-             RoleArn=assume_role_arn,
-             RoleSessionName='DeployDome9CFTSession',
-             DurationSeconds=1800
-             )
+            try:
+                stsresp = stsclient.assume_role(
+                RoleArn=assume_role_arn,
+                RoleSessionName='DeployDome9CFTSession',
+                DurationSeconds=1800
+                )
+            except ClientError:
+                print(f'\nCould not assume role for account {account["name"]}')
+                count_failures += 1
+                if OPTIONS.ignore_failures:
+                    continue
+                else:
+                    os._exit(1)
             cfclient = boto3.client('cloudformation',
              aws_access_key_id=stsresp['Credentials']['AccessKeyId'],
              aws_secret_access_key=stsresp['Credentials']['SecretAccessKey'],
