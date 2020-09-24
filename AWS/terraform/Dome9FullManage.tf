@@ -1,5 +1,6 @@
 #Required for each account
-variable "external_id" {}
+variable "external_id" {
+}
 
 #Create the role and setup the trust policy
 resource "aws_iam_role" "dome9" {
@@ -23,46 +24,48 @@ resource "aws_iam_role" "dome9" {
   ]
 }
 EOF
+
 }
 
 #Create the readonly policy
 resource "aws_iam_policy" "readonly-policy" {
   name        = "Dome9-readonly-policy"
   description = ""
-  policy      = "${file("readonly-policy.json")}"
+  policy      = file("readonly-policy.json")
 }
 
 #Create the write policy
 resource "aws_iam_policy" "write-policy" {
   name        = "Dome9-write-policy"
   description = ""
-  policy      = "${file("write-policy.json")}"
+  policy      = file("write-policy.json")
 }
 
 #Attach 4 policies to the cross-account role
 resource "aws_iam_policy_attachment" "attach-d9-read-policy" {
   name       = "Attach-readonly"
-  roles      = ["${aws_iam_role.dome9.name}"]
-  policy_arn = "${aws_iam_policy.readonly-policy.arn}"
+  roles      = [aws_iam_role.dome9.name]
+  policy_arn = aws_iam_policy.readonly-policy.arn
 }
 
 resource "aws_iam_policy_attachment" "attach-d9-write-policy" {
   name       = "Attach-write"
-  roles      = ["${aws_iam_role.dome9.name}"]
-  policy_arn = "${aws_iam_policy.write-policy.arn}"
+  roles      = [aws_iam_role.dome9.name]
+  policy_arn = aws_iam_policy.write-policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "attach-security-audit" {
-    role       = "${aws_iam_role.dome9.name}"
-    policy_arn = "arn:aws:iam::aws:policy/SecurityAudit"
+  role       = aws_iam_role.dome9.name
+  policy_arn = "arn:aws:iam::aws:policy/SecurityAudit"
 }
 
 resource "aws_iam_role_policy_attachment" "attach-inspector-readonly" {
-    role       = "${aws_iam_role.dome9.name}"
-    policy_arn = "arn:aws:iam::aws:policy/AmazonInspectorReadOnlyAccess"
+  role       = aws_iam_role.dome9.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonInspectorReadOnlyAccess"
 }
 
 #Output the role ARN
 output "Role_ARN" {
-  value = "${aws_iam_role.dome9.arn}"
+  value = aws_iam_role.dome9.arn
 }
+
