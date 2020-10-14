@@ -320,18 +320,20 @@ def mode_organizations_onboard(orgclient, stsclient, cfclient):
                 ou_attached = attach_account_to_ou_in_d9(d9_cloud_account_id, d9_ou_id)
         elif not aws_ou_list: # Account is in AWS Orgs root
             d9_cloud_account_id = process_account(cfclient, account['name'])
+            d9_ou_id=False # Decalre if's variables  
+            ou_attached=False
 
-        if (not d9_cloud_account_id or not d9_ou_id or not ou_attached) and not OPTIONS.ignore_failures:
-            count_failures += 1 
-            print(f'\nError when attempting to onboard AWS account to Dome9. Exiting...')
-            _print_stats(len(unprotected_account_list), count_successes, count_failures)
-            os._exit(1)
-        elif (d9_cloud_account_id == False or not d9_ou_id or not ou_attached) and OPTIONS.ignore_failures:
-            print('\nError when attempting to onboard AWS account to Dome9. Continuing...')
-            count_failures += 1
-        elif d9_ou_id and d9_cloud_account_id and ou_attached:
+        #Check Dome9 update
+        if  d9_cloud_account_id and (OPTIONS.ignore_ou or (d9_ou_id and ou_attached)):
             count_successes += 1
-        
+        else :
+            count_failures += 1
+            print('\nError when attempting to onboard ' , d9_ou_id +' AWS account to Dome9.')
+            _print_stats(len(unprotected_account_list), count_successes, count_failures)
+            if not OPTIONS.ignore_failures :
+                print(f'\nignore_failures=false exiting')
+                os._exit(1)
+              
     _print_stats(len(unprotected_account_list), count_successes, count_failures)
     
 def process_account(cfclient, aws_account_name):
