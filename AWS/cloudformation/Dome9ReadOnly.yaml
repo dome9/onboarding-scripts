@@ -34,6 +34,7 @@ Resources:
               - 'cognito-idp:DescribeRiskConfiguration'
               - 'dynamodb:ListTagsOfResource'
               - 'ec2:SearchTransitGatewayRoutes'
+              - 'ec2:DescribeSecurityGroups'
               - 'elasticfilesystem:Describe*'
               - 'elasticache:ListTagsForResource'
               - 'es:ListTags'
@@ -61,6 +62,12 @@ Resources:
               - 'waf-regional:ListResourcesForWebACL'
               - 'wafv2:ListWebACLs'
               - 'wafv2:ListResourcesForWebACL'
+              - 'athena:GetQueryExecution'
+              - 'athena:GetWorkGroup'
+              - 'glue:GetConnections'
+              - 'sns:GetPlatformApplicationAttributes'
+              - 'sns:ListPlatformApplications'
+              - 'iam:ListUsers'
           Effect: Allow
           Resource: "*"
 Parameters:
