@@ -29,26 +29,45 @@ Resources:
         Statement:
         - Sid: Dome9ReadOnly
           Action:
-          - cloudtrail:LookupEvents
-          - dynamodb:DescribeTable
-          - elasticfilesystem:Describe*
-          - elasticache:ListTagsForResource
-          - firehose:Describe*
-          - firehose:List*
-          - guardduty:Get*
-          - guardduty:List*
-          - kinesis:List*
-          - kinesis:Describe*
-          - kinesisvideo:Describe*
-          - kinesisvideo:List*
-          - logs:Describe*
-          - logs:Get*
-          - logs:FilterLogEvents
-          - lambda:List*
-          - s3:List*
-          - sns:ListSubscriptions
-          - sns:ListSubscriptionsByTopic
-          - waf-regional:ListResourcesForWebACL
+              - 'cognito-identity:DescribeIdentityPool'
+              - 'cognito-idp:DescribeUserPool'
+              - 'cognito-idp:DescribeRiskConfiguration'
+              - 'dynamodb:ListTagsOfResource'
+              - 'ec2:SearchTransitGatewayRoutes'
+              - 'ec2:DescribeSecurityGroups'
+              - 'elasticfilesystem:Describe*'
+              - 'elasticache:ListTagsForResource'
+              - 'es:ListTags'
+              - 'eks:DescribeNodegroup'
+              - 'eks:ListNodegroups'
+              - 'glue:GetSecurityConfigurations'
+              - 'kinesis:List*'
+              - 'kinesis:Describe*'
+              - 'kinesisvideo:Describe*'
+              - 'kinesisvideo:List*'
+              - 'logs:Get*'
+              - 'logs:FilterLogEvents'
+              - 'mq:DescribeBroker'
+              - 'mq:ListBrokers'
+              - 'personalize:DescribeDatasetGroup'
+              - 'personalize:ListDatasetGroups'
+              - 's3:List*'
+              - 'secretsmanager:DescribeSecret'
+              - 'sns:ListSubscriptions'
+              - 'sns:ListTagsForResource'
+              - 'states:DescribeStateMachine'
+              - 'transcribe:Get*'
+              - 'transcribe:List*'
+              - 'translate:GetTerminology'
+              - 'waf-regional:ListResourcesForWebACL'
+              - 'wafv2:ListWebACLs'
+              - 'wafv2:ListResourcesForWebACL'
+              - 'athena:GetQueryExecution'
+              - 'athena:GetWorkGroup'
+              - 'glue:GetConnections'
+              - 'sns:GetPlatformApplicationAttributes'
+              - 'sns:ListPlatformApplications'
+              - 'iam:ListUsers'
           Effect: Allow
           Resource: "*"
 Parameters:
